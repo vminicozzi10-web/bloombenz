@@ -1,0 +1,2419 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Enzo Stock Exchange — Bloombenz Platform</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap');
+
+  :root {
+    --bg-primary: #0a0e17;
+    --bg-secondary: #0f1520;
+    --bg-tertiary: #151c2c;
+    --bg-panel: #111827;
+    --bg-hover: #1a2234;
+    --border: #1e293b;
+    --border-active: #334155;
+    --text-primary: #e2e8f0;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --accent-green: #00ff88;
+    --accent-green-dim: #00cc6a;
+    --accent-red: #ff3b5c;
+    --accent-amber: #ffb800;
+    --accent-blue: #3b82f6;
+    --accent-cyan: #06b6d4;
+    --accent-purple: #a78bfa;
+    --positive: #00ff88;
+    --negative: #ff3b5c;
+    --font-mono: 'JetBrains Mono', 'Consolas', monospace;
+    --font-sans: 'IBM Plex Sans', -apple-system, sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    overflow-x: hidden;
+    min-height: 100vh;
+  }
+
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg-primary); }
+  ::-webkit-scrollbar-thumb { background: var(--border-active); border-radius: 2px; }
+
+  /* ===== HEADER ===== */
+  .header {
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .logo .enzo { color: var(--accent-green); }
+  .logo .stock { color: var(--text-primary); }
+  .logo .exchange { color: var(--accent-amber); }
+
+  .logo-badge {
+    background: linear-gradient(135deg, var(--accent-green), var(--accent-cyan));
+    color: var(--bg-primary);
+    padding: 2px 7px;
+    font-size: 9px;
+    font-weight: 700;
+    border-radius: 2px;
+    letter-spacing: 1px;
+  }
+
+  .header-info {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .live-dot {
+    width: 6px; height: 6px;
+    background: var(--accent-green);
+    border-radius: 50%;
+    display: inline-block;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .ticker-tape {
+    display: flex;
+    overflow: hidden;
+    background: var(--bg-primary);
+    border-bottom: 1px solid var(--border);
+    height: 28px;
+  }
+
+  .ticker-scroll {
+    display: flex;
+    animation: scroll 60s linear infinite;
+    align-items: center;
+  }
+
+  .ticker-scroll:hover { animation-play-state: paused; }
+
+  @keyframes scroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  .ticker-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 16px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    white-space: nowrap;
+    border-right: 1px solid var(--border);
+    height: 100%;
+  }
+
+  .ticker-symbol { color: var(--text-secondary); font-weight: 600; }
+  .ticker-change.up { color: var(--positive); }
+  .ticker-change.down { color: var(--negative); }
+
+  /* ===== NAV ===== */
+  .nav-tabs {
+    display: flex;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+  }
+
+  .nav-tab {
+    padding: 8px 20px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-muted);
+    cursor: pointer;
+    border: none;
+    background: none;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    transition: all 0.2s;
+    border-bottom: 2px solid transparent;
+  }
+
+  .nav-tab:hover { color: var(--text-secondary); background: var(--bg-hover); }
+  .nav-tab.active { color: var(--accent-green); border-bottom-color: var(--accent-green); background: var(--bg-tertiary); }
+
+  /* ===== SETTINGS MODAL ===== */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 999;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-active);
+    border-radius: 8px;
+    padding: 24px;
+    width: 460px;
+    max-width: 90vw;
+  }
+
+  .modal h3 {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--accent-green);
+    margin-bottom: 16px;
+  }
+
+  .modal label {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+    letter-spacing: 0.5px;
+  }
+
+  .modal input[type="password"], .modal input[type="text"] {
+    width: 100%;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 10px 12px;
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    outline: none;
+    margin-bottom: 16px;
+    transition: border-color 0.2s;
+  }
+
+  .modal input:focus { border-color: var(--accent-green); }
+
+  .modal-btns {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+  }
+
+  .btn-save {
+    background: var(--accent-green);
+    color: var(--bg-primary);
+    border: none;
+    border-radius: 4px;
+    padding: 8px 20px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .btn-cancel {
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 8px 20px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    cursor: pointer;
+  }
+
+  /* ===== MAIN LAYOUT ===== */
+  .main-layout {
+    display: grid;
+    grid-template-columns: 260px 1fr 320px;
+    min-height: calc(100vh - 110px);
+    gap: 1px;
+    background: var(--border);
+  }
+
+  /* LEFT PANEL */
+  .left-panel {
+    background: var(--bg-secondary);
+    overflow-y: auto;
+    max-height: calc(100vh - 110px);
+  }
+
+  .panel-header {
+    padding: 10px 12px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--accent-amber);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-tertiary);
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .watchlist-section { border-bottom: 1px solid var(--border); }
+
+  .watchlist-section-title {
+    padding: 6px 12px;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    background: rgba(255,255,255,0.02);
+  }
+
+  .watchlist-item {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    align-items: center;
+    padding: 6px 12px;
+    cursor: pointer;
+    transition: background 0.15s;
+    gap: 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.02);
+  }
+
+  .watchlist-item:hover { background: var(--bg-hover); }
+  .watchlist-item.active { background: var(--bg-tertiary); border-left: 2px solid var(--accent-green); }
+
+  .wl-symbol { font-family: var(--font-mono); font-size: 11px; font-weight: 600; color: var(--text-primary); }
+  .wl-name { font-size: 9px; color: var(--text-muted); }
+  .wl-change { font-family: var(--font-mono); font-size: 10px; text-align: right; padding: 1px 4px; border-radius: 2px; min-width: 52px; text-align: center; }
+  .wl-change.up { color: var(--positive); background: rgba(0,255,136,0.1); }
+  .wl-change.down { color: var(--negative); background: rgba(255,59,92,0.1); }
+
+  /* CENTER */
+  .center-panel {
+    background: var(--bg-primary);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .chart-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 12px;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .chart-symbol-display {
+    font-family: var(--font-mono);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--accent-green);
+  }
+
+  .tf-buttons { display: flex; gap: 2px; }
+
+  .tf-btn {
+    padding: 3px 8px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    background: var(--bg-tertiary);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .tf-btn:hover { color: var(--text-primary); border-color: var(--border-active); }
+  .tf-btn.active { background: var(--accent-green); color: var(--bg-primary); border-color: var(--accent-green); }
+
+  .chart-container { flex: 1; min-height: 450px; position: relative; }
+  .chart-container iframe { width: 100%; height: 100%; border: none; }
+
+  /* LAYERS */
+  .layer-section { background: var(--bg-secondary); border-top: 1px solid var(--border); }
+
+  .layer-tabs { display: flex; border-bottom: 1px solid var(--border); }
+
+  .layer-tab {
+    padding: 8px 16px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    border: none;
+    background: none;
+    letter-spacing: 0.5px;
+    transition: all 0.2s;
+    border-bottom: 2px solid transparent;
+  }
+
+  .layer-tab:hover { color: var(--text-secondary); }
+  .layer-tab.active { color: var(--accent-cyan); border-bottom-color: var(--accent-cyan); }
+
+  .layer-badge {
+    font-size: 8px;
+    padding: 1px 4px;
+    border-radius: 2px;
+    margin-left: 4px;
+    vertical-align: super;
+  }
+
+  .layer-tab[data-layer="0"] .layer-badge { background: rgba(255,184,0,0.2); color: var(--accent-amber); }
+  .layer-tab[data-layer="1"] .layer-badge { background: rgba(59,130,246,0.2); color: var(--accent-blue); }
+  .layer-tab[data-layer="2"] .layer-badge { background: rgba(167,139,250,0.2); color: var(--accent-purple); }
+  .layer-tab[data-layer="3"] .layer-badge { background: rgba(0,255,136,0.2); color: var(--accent-green); }
+
+  .layer-content { padding: 12px; max-height: 250px; overflow-y: auto; display: none; font-size: 12px; line-height: 1.6; }
+  .layer-content.active { display: block; }
+
+  .layer-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; }
+
+  .layer-card {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 10px;
+    transition: border-color 0.2s;
+  }
+
+  .layer-card:hover { border-color: var(--border-active); }
+
+  .layer-card-title {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--accent-cyan);
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+  }
+
+  .layer-card-body { font-size: 11px; color: var(--text-secondary); line-height: 1.5; }
+
+  .tag { display: inline-block; padding: 1px 5px; font-family: var(--font-mono); font-size: 9px; border-radius: 2px; margin: 1px; }
+  .tag-green { background: rgba(0,255,136,0.12); color: var(--accent-green); }
+  .tag-red { background: rgba(255,59,92,0.12); color: var(--accent-red); }
+  .tag-amber { background: rgba(255,184,0,0.12); color: var(--accent-amber); }
+  .tag-blue { background: rgba(59,130,246,0.12); color: var(--accent-blue); }
+  .tag-purple { background: rgba(167,139,250,0.12); color: var(--accent-purple); }
+  .tag-cyan { background: rgba(6,182,212,0.12); color: var(--accent-cyan); }
+
+  /* RIGHT PANEL */
+  .right-panel {
+    background: var(--bg-secondary);
+    overflow-y: auto;
+    max-height: calc(100vh - 110px);
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* AI Section */
+  .ai-input-area { padding: 10px 12px; display: flex; gap: 6px; }
+
+  .ai-input {
+    flex: 1;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 8px 10px;
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    font-size: 12px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .ai-input:focus { border-color: var(--accent-green); }
+  .ai-input::placeholder { color: var(--text-muted); }
+
+  .ai-btn {
+    background: var(--accent-green);
+    color: var(--bg-primary);
+    border: none;
+    border-radius: 4px;
+    padding: 8px 12px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+
+  .ai-btn:hover { background: var(--accent-green-dim); }
+  .ai-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .ai-output {
+    padding: 10px 12px;
+    max-height: 320px;
+    overflow-y: auto;
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .ai-output strong, .ai-output b { color: var(--accent-green); font-weight: 600; }
+
+  .thinking-anim {
+    color: var(--accent-amber);
+    font-family: var(--font-mono);
+    font-size: 11px;
+  }
+
+  .thinking-anim::after {
+    content: '';
+    animation: dots 1.5s infinite;
+  }
+
+  @keyframes dots {
+    0% { content: ''; }
+    25% { content: '.'; }
+    50% { content: '..'; }
+    75% { content: '...'; }
+  }
+
+  /* Portfolio */
+  .portfolio-item {
+    display: grid;
+    grid-template-columns: 1fr auto auto auto;
+    align-items: center;
+    padding: 6px 12px;
+    font-size: 11px;
+    border-bottom: 1px solid rgba(255,255,255,0.02);
+    gap: 8px;
+  }
+
+  .portfolio-item .sym { font-family: var(--font-mono); font-weight: 600; color: var(--text-primary); }
+  .portfolio-item .qty { font-family: var(--font-mono); color: var(--text-muted); font-size: 10px; }
+  .portfolio-item .val { font-family: var(--font-mono); color: var(--text-primary); text-align: right; }
+  .portfolio-item .pnl { font-family: var(--font-mono); font-size: 10px; text-align: right; }
+  .pnl.up { color: var(--positive); }
+  .pnl.down { color: var(--negative); }
+
+  /* Entry Signal */
+  .entry-signal {
+    margin: 8px;
+    padding: 10px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+  }
+
+  .entry-signal-title {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--accent-purple);
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+
+  .entry-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 3px 0;
+    font-size: 11px;
+  }
+
+  .entry-label { font-family: var(--font-mono); color: var(--text-muted); font-size: 10px; }
+  .entry-value { font-family: var(--font-mono); font-weight: 600; }
+
+  .settings-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .settings-btn:hover { color: var(--accent-green); border-color: var(--accent-green); }
+
+  .api-status {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 2px;
+  }
+
+  .api-status.connected { background: rgba(0,255,136,0.15); color: var(--accent-green); }
+  .api-status.disconnected { background: rgba(255,59,92,0.15); color: var(--accent-red); }
+
+  /* Footer */
+  .footer {
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border);
+    padding: 6px 16px;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--text-muted);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .status-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; margin-right: 4px; }
+  .status-dot.green { background: var(--accent-green); }
+
+  /* ===== TRADE JOURNAL ===== */
+  .journal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+    background: var(--bg-primary);
+    overflow-y: auto;
+    padding-top: 100px;
+  }
+  .journal-overlay.open { display: block; }
+
+  .journal-header {
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .journal-stats-bar {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 8px;
+    padding: 0 24px 16px;
+  }
+
+  .stat-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px;
+    text-align: center;
+  }
+
+  .stat-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .stat-value {
+    font-family: var(--font-mono);
+    font-size: 20px;
+    font-weight: 700;
+  }
+
+  .stat-sub {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  .journal-body {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    gap: 1px;
+    background: var(--border);
+    padding: 0 24px 24px;
+  }
+
+  .journal-form-panel {
+    background: var(--bg-secondary);
+    border-radius: 6px 0 0 6px;
+    padding: 16px;
+    overflow-y: auto;
+    max-height: 70vh;
+  }
+
+  .journal-list-panel {
+    background: var(--bg-secondary);
+    border-radius: 0 6px 6px 0;
+    overflow-y: auto;
+    max-height: 70vh;
+  }
+
+  .jf-title {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent-green);
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+  }
+
+  .jf-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .jf-row.full { grid-template-columns: 1fr; }
+
+  .jf-group { display: flex; flex-direction: column; gap: 3px; }
+
+  .jf-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .jf-input, .jf-select, .jf-textarea {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 7px 9px;
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    outline: none;
+    transition: border-color 0.2s;
+    width: 100%;
+  }
+
+  .jf-input:focus, .jf-select:focus, .jf-textarea:focus { border-color: var(--accent-green); }
+
+  .jf-select { cursor: pointer; }
+  .jf-select option { background: var(--bg-tertiary); color: var(--text-primary); }
+
+  .jf-textarea { resize: vertical; min-height: 50px; font-family: var(--font-sans); font-size: 11px; }
+
+  .jf-apgar-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 6px;
+  }
+
+  .jf-apgar-row label {
+    flex: 1;
+    font-size: 10px;
+    color: var(--text-secondary);
+  }
+
+  .jf-apgar-row select {
+    width: 60px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 3px;
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    cursor: pointer;
+  }
+
+  .jf-submit {
+    width: 100%;
+    background: var(--accent-green);
+    color: var(--bg-primary);
+    border: none;
+    border-radius: 4px;
+    padding: 10px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 1px;
+    margin-top: 8px;
+    transition: background 0.2s;
+  }
+
+  .jf-submit:hover { background: var(--accent-green-dim); }
+
+  .jf-reset {
+    width: 100%;
+    background: none;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 6px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    cursor: pointer;
+    margin-top: 4px;
+  }
+
+  /* Journal trade rows */
+  .jtrade {
+    display: grid;
+    grid-template-columns: 70px 60px 1fr auto auto auto;
+    align-items: center;
+    padding: 8px 12px;
+    gap: 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    font-size: 11px;
+    transition: background 0.15s;
+  }
+
+  .jtrade:hover { background: var(--bg-hover); }
+
+  .jtrade-date { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); }
+  .jtrade-dir { font-family: var(--font-mono); font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 2px; text-align: center; }
+  .jtrade-dir.long { background: rgba(0,255,136,0.15); color: var(--accent-green); }
+  .jtrade-dir.short { background: rgba(255,59,92,0.15); color: var(--accent-red); }
+  .jtrade-info { color: var(--text-primary); }
+  .jtrade-info small { color: var(--text-muted); font-size: 9px; display: block; }
+  .jtrade-pnl { font-family: var(--font-mono); font-weight: 700; text-align: right; }
+  .jtrade-pnl.up { color: var(--positive); }
+  .jtrade-pnl.down { color: var(--negative); }
+  .jtrade-grade { font-family: var(--font-mono); font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 2px; text-align: center; }
+  .grade-a { background: rgba(0,255,136,0.2); color: var(--accent-green); }
+  .grade-b { background: rgba(59,130,246,0.2); color: var(--accent-blue); }
+  .grade-c { background: rgba(255,184,0,0.2); color: var(--accent-amber); }
+  .grade-d { background: rgba(255,59,92,0.2); color: var(--accent-red); }
+
+  .jtrade-del {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 12px;
+    opacity: 0.4;
+    transition: opacity 0.2s;
+  }
+  .jtrade-del:hover { opacity: 1; color: var(--accent-red); }
+
+  .jtrade-header {
+    background: var(--bg-tertiary);
+    font-weight: 700;
+    font-size: 9px;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+  }
+
+  .douglas-check {
+    background: rgba(167,139,250,0.08);
+    border: 1px solid rgba(167,139,250,0.2);
+    border-radius: 4px;
+    padding: 8px;
+    margin: 8px 0;
+  }
+
+  .douglas-check-title {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--accent-purple);
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+  }
+
+  .douglas-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 0;
+    font-size: 10px;
+    color: var(--text-secondary);
+  }
+
+  .douglas-item input[type="checkbox"] {
+    accent-color: var(--accent-purple);
+  }
+
+  @media (max-width: 1200px) {
+    .journal-body { grid-template-columns: 1fr; }
+  }
+
+  /* ===== MACRO CALENDAR ===== */
+  .macro-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+    background: var(--bg-primary);
+    overflow-y: auto;
+    padding-top: 100px;
+  }
+
+  .macro-overlay.open { display: block; }
+
+  .macro-header {
+    padding: 20px 24px 12px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .macro-title {
+    font-family: var(--font-mono);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--accent-amber);
+    letter-spacing: 1px;
+  }
+
+  .macro-subtitle {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  .macro-countdown {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-active);
+    border-radius: 6px;
+    padding: 12px 20px;
+    text-align: center;
+    min-width: 240px;
+  }
+
+  .countdown-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .countdown-event {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent-green);
+    margin-bottom: 2px;
+  }
+
+  .countdown-time {
+    font-family: var(--font-mono);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: 2px;
+  }
+
+  .countdown-date {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  .macro-filters {
+    display: flex;
+    gap: 6px;
+    padding: 0 24px 12px;
+    flex-wrap: wrap;
+  }
+
+  .macro-filter-btn {
+    padding: 5px 12px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    cursor: pointer;
+    background: var(--bg-secondary);
+    color: var(--text-muted);
+    transition: all 0.2s;
+    letter-spacing: 0.5px;
+  }
+
+  .macro-filter-btn:hover { color: var(--text-primary); border-color: var(--border-active); }
+  .macro-filter-btn.active { color: var(--bg-primary); font-weight: 700; }
+
+  .macro-filter-btn[data-filter="all"].active { background: var(--text-primary); border-color: var(--text-primary); }
+  .macro-filter-btn[data-filter="fomc"].active { background: #ff3b3b; border-color: #ff3b3b; }
+  .macro-filter-btn[data-filter="ecb"].active { background: var(--accent-blue); border-color: var(--accent-blue); }
+  .macro-filter-btn[data-filter="cpi"].active { background: var(--accent-amber); border-color: var(--accent-amber); }
+  .macro-filter-btn[data-filter="ppi"].active { background: #ff9500; border-color: #ff9500; }
+  .macro-filter-btn[data-filter="nfp"].active { background: var(--accent-cyan); border-color: var(--accent-cyan); }
+  .macro-filter-btn[data-filter="gdp"].active { background: var(--accent-purple); border-color: var(--accent-purple); }
+
+  .macro-timeline {
+    padding: 0 24px 24px;
+  }
+
+  .macro-month-header {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-primary);
+    padding: 12px 0 6px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 4px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    position: sticky;
+    top: 0;
+    background: var(--bg-primary);
+    z-index: 2;
+  }
+
+  .macro-event {
+    display: grid;
+    grid-template-columns: 90px auto 1fr auto;
+    align-items: center;
+    padding: 8px 12px;
+    gap: 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    transition: background 0.15s;
+    border-radius: 3px;
+  }
+
+  .macro-event:hover { background: var(--bg-hover); }
+  .macro-event.past { opacity: 0.35; }
+  .macro-event.next { background: rgba(0,255,136,0.05); border: 1px solid rgba(0,255,136,0.15); }
+
+  .macro-event-date {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+
+  .macro-event-badge {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 2px;
+    letter-spacing: 0.5px;
+    text-align: center;
+    min-width: 55px;
+  }
+
+  .badge-fomc { background: rgba(255,59,59,0.2); color: #ff3b3b; }
+  .badge-ecb { background: rgba(59,130,246,0.2); color: var(--accent-blue); }
+  .badge-cpi { background: rgba(255,184,0,0.2); color: var(--accent-amber); }
+  .badge-ppi { background: rgba(255,149,0,0.2); color: #ff9500; }
+  .badge-nfp { background: rgba(6,182,212,0.2); color: var(--accent-cyan); }
+  .badge-gdp { background: rgba(167,139,250,0.2); color: var(--accent-purple); }
+
+  .macro-event-name {
+    font-size: 12px;
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+
+  .macro-event-name small {
+    color: var(--text-muted);
+    font-weight: 400;
+    font-size: 10px;
+  }
+
+  .macro-event-time {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    text-align: right;
+  }
+
+  .macro-event-countdown {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--accent-green);
+    text-align: right;
+    min-width: 80px;
+  }
+
+  .macro-event.past .macro-event-countdown { color: var(--text-muted); }
+
+  .macro-legend {
+    display: flex;
+    gap: 16px;
+    padding: 8px 24px 16px;
+    flex-wrap: wrap;
+  }
+
+  .macro-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-muted);
+  }
+
+  .macro-legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+  }
+
+  @media (max-width: 1200px) {
+    .main-layout { grid-template-columns: 1fr; }
+    .left-panel, .right-panel { max-height: none; }
+    .chart-container { min-height: 400px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-top">
+    <div style="display:flex;align-items:center;gap:16px;">
+      <div class="logo">
+        <span class="enzo">ENZO</span>
+        <span class="stock">STOCK</span>
+        <span class="exchange">EXCHANGE</span>
+        <span class="logo-badge">PRO</span>
+      </div>
+      <div style="border-left:1px solid var(--border);padding-left:12px;">
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--accent-cyan);letter-spacing:1.5px;font-weight:600;">BLOOMBENZ PLATFORM</div>
+        <div style="font-family:var(--font-mono);font-size:8px;color:var(--text-muted);letter-spacing:0.5px;margin-top:1px;">Developed by Vincenzo Minicozzi</div>
+      </div>
+    </div>
+    <div class="header-info">
+      <span><span class="live-dot"></span> LIVE</span>
+      <span id="clock"></span>
+      <span>BENEVENTO</span>
+      <span>TAX 26%</span>
+    </div>
+  </div>
+  <div class="ticker-tape">
+    <div class="ticker-scroll" id="tickerScroll"></div>
+  </div>
+</header>
+
+<!-- NAV -->
+<nav class="nav-tabs">
+  <button class="nav-tab active" data-view="dashboard">DASHBOARD</button>
+  <button class="nav-tab" data-view="forex">FOREX</button>
+  <button class="nav-tab" data-view="stocks">STOCKS</button>
+  <button class="nav-tab" data-view="commodities">COMMODITIES</button>
+  <button class="nav-tab" data-view="portfolio">PORTFOLIO</button>
+  <button class="nav-tab" data-view="macro">MACRO CAL</button>
+  <button class="nav-tab" data-view="journal">TRADE JOURNAL</button>
+</nav>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal">
+    <h3>⚙️ API SETTINGS</h3>
+    <label>ANTHROPIC API KEY</label>
+    <input type="password" id="apiKeyInput" placeholder="sk-ant-api03-..." />
+    <div style="font-size:11px;color:var(--text-muted);margin:-10px 0 16px;">
+      Ottieni la chiave da <a href="https://console.anthropic.com" target="_blank" style="color:var(--accent-cyan);">console.anthropic.com</a> → API Keys
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeSettings()">Annulla</button>
+      <button class="btn-save" onclick="saveApiKey()">Salva & Connetti</button>
+    </div>
+  </div>
+</div>
+
+<!-- TRADE JOURNAL OVERLAY -->
+<div class="journal-overlay" id="journalOverlay">
+  <div class="journal-header">
+    <div style="display:flex;align-items:center;gap:16px;">
+      <button onclick="closeJournal()" style="background:var(--accent-green);color:var(--bg-primary);border:none;border-radius:4px;padding:8px 16px;font-family:var(--font-mono);font-size:11px;font-weight:700;cursor:pointer;letter-spacing:0.5px;">← DASHBOARD</button>
+      <div>
+        <div style="font-family:var(--font-mono);font-size:18px;font-weight:700;color:var(--accent-purple);letter-spacing:1px;">📓 TRADE JOURNAL</div>
+        <div style="font-size:12px;color:var(--text-muted);">Elder Trade Apgar · Douglas Psicologia · Layer L0→L3</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <span style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted);" id="journalCount">0 trades</span>
+      <button onclick="exportJournal()" style="background:var(--bg-tertiary);color:var(--text-secondary);border:1px solid var(--border);border-radius:4px;padding:6px 12px;font-family:var(--font-mono);font-size:10px;cursor:pointer;">📥 EXPORT CSV</button>
+    </div>
+  </div>
+
+  <!-- STATS BAR -->
+  <div class="journal-stats-bar" id="journalStats">
+    <div class="stat-card"><div class="stat-label">Totale Trades</div><div class="stat-value" id="stTot">0</div></div>
+    <div class="stat-card"><div class="stat-label">Win Rate</div><div class="stat-value" id="stWin" style="color:var(--accent-green);">—</div></div>
+    <div class="stat-card"><div class="stat-label">Profit Factor</div><div class="stat-value" id="stPF">—</div></div>
+    <div class="stat-card"><div class="stat-label">P/L Netto (26%)</div><div class="stat-value" id="stPnl">€0</div></div>
+    <div class="stat-card"><div class="stat-label">Avg Trade Apgar</div><div class="stat-value" id="stApgar" style="color:var(--accent-cyan);">—</div></div>
+    <div class="stat-card"><div class="stat-label">Avg Grade</div><div class="stat-value" id="stGrade">—</div></div>
+    <div class="stat-card"><div class="stat-label">Best Setup</div><div class="stat-value" id="stBest" style="font-size:12px;color:var(--accent-amber);">—</div></div>
+    <div class="stat-card"><div class="stat-label">Douglas 20-Trade</div><div class="stat-value" id="stDouglas" style="color:var(--accent-purple);">0/20</div><div class="stat-sub">Esercizio meccanico</div></div>
+  </div>
+
+  <!-- FORM + LIST -->
+  <div class="journal-body">
+    <!-- FORM -->
+    <div class="journal-form-panel">
+      <div class="jf-title">➕ Nuovo Trade</div>
+
+      <div class="jf-row">
+        <div class="jf-group"><label class="jf-label">Data Entry</label><input type="date" class="jf-input" id="jfDateIn"></div>
+        <div class="jf-group"><label class="jf-label">Data Exit</label><input type="date" class="jf-input" id="jfDateOut"></div>
+      </div>
+
+      <div class="jf-row">
+        <div class="jf-group"><label class="jf-label">Strumento</label><input type="text" class="jf-input" id="jfSymbol" placeholder="es. EURUSD, NVDA..."></div>
+        <div class="jf-group"><label class="jf-label">Direzione</label>
+          <select class="jf-select" id="jfDir"><option value="long">🟢 LONG</option><option value="short">🔴 SHORT</option></select>
+        </div>
+      </div>
+
+      <div class="jf-row">
+        <div class="jf-group"><label class="jf-label">Broker</label>
+          <select class="jf-select" id="jfBroker"><option value="degiro">DeGiro</option><option value="scalable">Scalable Capital</option><option value="mt4">MT4/MT5 Forex</option><option value="other">Altro</option></select>
+        </div>
+        <div class="jf-group"><label class="jf-label">Size / Qty</label><input type="text" class="jf-input" id="jfSize" placeholder="es. 2, 0.01 lot..."></div>
+      </div>
+
+      <div class="jf-row">
+        <div class="jf-group"><label class="jf-label">Prezzo Entry</label><input type="number" step="any" class="jf-input" id="jfEntry" placeholder="0.00"></div>
+        <div class="jf-group"><label class="jf-label">Prezzo Exit</label><input type="number" step="any" class="jf-input" id="jfExit" placeholder="0.00"></div>
+      </div>
+
+      <div class="jf-row">
+        <div class="jf-group"><label class="jf-label">Stop Loss</label><input type="number" step="any" class="jf-input" id="jfSL" placeholder="0.00"></div>
+        <div class="jf-group"><label class="jf-label">Take Profit</label><input type="number" step="any" class="jf-input" id="jfTP" placeholder="0.00"></div>
+      </div>
+
+      <div class="jf-row full">
+        <div class="jf-group"><label class="jf-label">P/L Lordo (€)</label><input type="number" step="any" class="jf-input" id="jfPnl" placeholder="Es: 150 o -80"></div>
+      </div>
+
+      <div class="jf-row full">
+        <div class="jf-group"><label class="jf-label">Setup / Segnale (quale layer?)</label>
+          <select class="jf-select" id="jfSetup">
+            <option value="macd-div">A-Trade: MACD-H Divergence (Elder)</option>
+            <option value="spring">Spring Wyckoff</option>
+            <option value="utad">UTAD Distribuzione (Wyckoff)</option>
+            <option value="triple-screen">Triple Screen W→D→H (Elder)</option>
+            <option value="golden-cross">Golden Cross MA</option>
+            <option value="death-cross">Death Cross MA</option>
+            <option value="rsi-div">RSI Divergence</option>
+            <option value="fib-bounce">Fibonacci Bounce</option>
+            <option value="candle-rev">Candlestick Reversal (Nison)</option>
+            <option value="kagi">Kagi Signal (Nison)</option>
+            <option value="intermarket">Intermarket Murphy B4</option>
+            <option value="dataroma">Superinvestor Follow (Dataroma)</option>
+            <option value="pattern">Chart Pattern (Bulkowski)</option>
+            <option value="breakout">Breakout / False Breakout</option>
+            <option value="other">Altro</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- DOUGLAS CHECK -->
+      <div class="douglas-check">
+        <div class="douglas-check-title">🧠 Douglas — Check Psicologico</div>
+        <div class="douglas-item"><input type="checkbox" id="dc1"><label for="dc1">Ho accettato il rischio PRIMA di entrare</label></div>
+        <div class="douglas-item"><input type="checkbox" id="dc2"><label for="dc2">Non sto cercando di recuperare una perdita</label></div>
+        <div class="douglas-item"><input type="checkbox" id="dc3"><label for="dc3">Sto seguendo il piano, non l'emozione</label></div>
+        <div class="douglas-item"><input type="checkbox" id="dc4"><label for="dc4">Pensiero probabilistico: questo è UN trade su molti</label></div>
+        <div class="douglas-item"><input type="checkbox" id="dc5"><label for="dc5">Rispetto la 2% Rule e la 6% Rule (Elder)</label></div>
+      </div>
+
+      <!-- ELDER TRADE APGAR -->
+      <div style="margin-top:8px;">
+        <div class="jf-label" style="color:var(--accent-cyan);font-size:10px;margin-bottom:8px;">📊 ELDER — Trade Apgar Score</div>
+        <div class="jf-apgar-row"><label>Entry quality</label><select id="ap1"><option value="0">0</option><option value="1">1</option><option value="2" selected>2</option></select></div>
+        <div class="jf-apgar-row"><label>Exit quality (se chiuso)</label><select id="ap2"><option value="0">0</option><option value="1">1</option><option value="2" selected>2</option></select></div>
+        <div class="jf-apgar-row"><label>Rischio rispettato?</label><select id="ap3"><option value="0">0</option><option value="1">1</option><option value="2" selected>2</option></select></div>
+        <div class="jf-apgar-row"><label>Piano seguito?</label><select id="ap4"><option value="0">0</option><option value="1">1</option><option value="2" selected>2</option></select></div>
+        <div class="jf-apgar-row"><label>P/L risultato</label><select id="ap5"><option value="0">0</option><option value="1">1</option><option value="2" selected>2</option></select></div>
+        <div style="font-family:var(--font-mono);font-size:11px;color:var(--text-secondary);margin-top:4px;">
+          Totale Apgar: <b id="apgarTotal" style="color:var(--accent-cyan);">10</b>/10 · 
+          Grade: <b id="apgarGrade" style="color:var(--accent-green);">—</b>
+        </div>
+      </div>
+
+      <div class="jf-row full" style="margin-top:8px;">
+        <div class="jf-group"><label class="jf-label">Note / Lezioni apprese</label><textarea class="jf-textarea" id="jfNotes" placeholder="Cosa ho imparato da questo trade? (Douglas: analisi 2 mesi dopo)"></textarea></div>
+      </div>
+
+      <button class="jf-submit" onclick="saveTrade()">💾 SALVA TRADE</button>
+      <button class="jf-reset" onclick="resetForm()">Resetta Form</button>
+    </div>
+
+    <!-- TRADE LIST -->
+    <div class="journal-list-panel">
+      <div class="jtrade jtrade-header">
+        <span>DATA</span><span>DIR</span><span>STRUMENTO / SETUP</span><span>P/L</span><span>GRADE</span><span></span>
+      </div>
+      <div id="journalList"></div>
+      <div id="journalEmpty" style="padding:40px;text-align:center;color:var(--text-muted);font-family:var(--font-mono);font-size:12px;">
+        Nessun trade registrato.<br>Inserisci il tuo primo trade dal form a sinistra.<br><br>
+        <span style="font-size:10px;color:var(--accent-purple);">Douglas: "L'esercizio dei 20 trades meccanici<br>costruisce la consistenza."</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MACRO CALENDAR OVERLAY -->
+<div class="macro-overlay" id="macroOverlay">
+  <div class="macro-header">
+    <div style="display:flex;align-items:center;gap:16px;">
+      <button onclick="closeMacro()" style="background:var(--accent-green);color:var(--bg-primary);border:none;border-radius:4px;padding:8px 16px;font-family:var(--font-mono);font-size:11px;font-weight:700;cursor:pointer;letter-spacing:0.5px;">← DASHBOARD</button>
+      <div>
+        <div class="macro-title">📅 MACRO CALENDAR 2026</div>
+        <div class="macro-subtitle">FOMC · ECB · CPI · PPI · NFP · GDP — Tutti gli eventi che muovono i mercati</div>
+      </div>
+    </div>
+    <div class="macro-countdown" id="macroCountdown">
+      <div class="countdown-label">⏱ Prossimo Evento</div>
+      <div class="countdown-event" id="nextEventName">—</div>
+      <div class="countdown-time" id="nextEventTime">--:--:--</div>
+      <div class="countdown-date" id="nextEventDate">—</div>
+    </div>
+  </div>
+
+  <div class="macro-legend">
+    <div class="macro-legend-item"><div class="macro-legend-dot" style="background:#ff3b3b;"></div> FOMC (Tomato)</div>
+    <div class="macro-legend-item"><div class="macro-legend-dot" style="background:var(--accent-blue);"></div> ECB</div>
+    <div class="macro-legend-item"><div class="macro-legend-dot" style="background:var(--accent-amber);"></div> CPI USA</div>
+    <div class="macro-legend-item"><div class="macro-legend-dot" style="background:#ff9500;"></div> PPI USA</div>
+    <div class="macro-legend-item"><div class="macro-legend-dot" style="background:var(--accent-cyan);"></div> NFP</div>
+    <div class="macro-legend-item"><div class="macro-legend-dot" style="background:var(--accent-purple);"></div> GDP USA</div>
+    <div class="macro-legend-item" style="margin-left:auto;color:var(--accent-green);">🟢 = Prossimo evento</div>
+  </div>
+
+  <div class="macro-filters">
+    <button class="macro-filter-btn active" data-filter="all">TUTTI</button>
+    <button class="macro-filter-btn" data-filter="fomc">FOMC</button>
+    <button class="macro-filter-btn" data-filter="ecb">ECB</button>
+    <button class="macro-filter-btn" data-filter="cpi">CPI</button>
+    <button class="macro-filter-btn" data-filter="ppi">PPI</button>
+    <button class="macro-filter-btn" data-filter="nfp">NFP</button>
+    <button class="macro-filter-btn" data-filter="gdp">GDP</button>
+  </div>
+
+  <div class="macro-timeline" id="macroTimeline"></div>
+</div>
+
+<!-- MAIN -->
+<div class="main-layout">
+
+  <!-- LEFT: WATCHLIST -->
+  <div class="left-panel">
+    <div class="panel-header">
+      <span>⬡ WATCHLIST</span>
+      <span style="font-size:9px;color:var(--text-muted)" id="watchCount"></span>
+    </div>
+    <div class="watchlist-section">
+      <div class="watchlist-section-title">▸ FOREX — Coppie Primarie</div>
+      <div id="forexList"></div>
+    </div>
+    <div class="watchlist-section">
+      <div class="watchlist-section-title">▸ COMMODITIES</div>
+      <div id="commoditiesList"></div>
+    </div>
+    <div class="watchlist-section">
+      <div class="watchlist-section-title">▸ INDICI & SENTIMENT</div>
+      <div id="indicesList"></div>
+    </div>
+    <div class="watchlist-section">
+      <div class="watchlist-section-title">▸ AZIONI — DeGiro Recovery</div>
+      <div id="stocksList"></div>
+    </div>
+    <div class="watchlist-section">
+      <div class="watchlist-section-title">▸ WATCHLIST — Target DeGiro</div>
+      <div id="watchTargetsList"></div>
+    </div>
+    <div class="watchlist-section">
+      <div class="watchlist-section-title">▸ ETF — PAC Trade Republic</div>
+      <div id="etfList"></div>
+    </div>
+  </div>
+
+  <!-- CENTER: CHART + LAYERS -->
+  <div class="center-panel">
+    <div class="chart-toolbar">
+      <div class="chart-symbol-display" id="chartSymbolName">EURUSD</div>
+      <div class="tf-buttons">
+        <button class="tf-btn" data-tf="1">1m</button>
+        <button class="tf-btn" data-tf="5">5m</button>
+        <button class="tf-btn" data-tf="15">15m</button>
+        <button class="tf-btn" data-tf="60">1H</button>
+        <button class="tf-btn" data-tf="240">4H</button>
+        <button class="tf-btn active" data-tf="D">D</button>
+        <button class="tf-btn" data-tf="W">W</button>
+        <button class="tf-btn" data-tf="M">M</button>
+      </div>
+    </div>
+
+    <div class="chart-container" id="chartContainer"></div>
+
+    <!-- LAYERS -->
+    <div class="layer-section">
+      <div class="layer-tabs">
+        <button class="layer-tab active" data-layer="0">L0 <span class="layer-badge">MACRO RADAR</span></button>
+        <button class="layer-tab" data-layer="1">L1 <span class="layer-badge">INSTITUTIONAL</span></button>
+        <button class="layer-tab" data-layer="2">L2 <span class="layer-badge">TECHNICAL</span></button>
+        <button class="layer-tab" data-layer="3">L3 <span class="layer-badge">MASTER</span></button>
+      </div>
+
+      <div class="layer-content active" data-layer="0">
+        <div class="layer-grid">
+          <div class="layer-card">
+            <div class="layer-card-title">🌐 WorldMonitor</div>
+            <div class="layer-card-body" style="font-family:var(--font-mono);font-size:10px;">
+              <a href="https://finance.worldmonitor.app" target="_blank" style="color:var(--accent-cyan);">finance.worldmonitor.app</a><br>
+              <a href="https://commodity.worldmonitor.app" target="_blank" style="color:var(--accent-cyan);">commodity.worldmonitor.app</a><br>
+              <a href="https://tech.worldmonitor.app" target="_blank" style="color:var(--accent-cyan);">tech.worldmonitor.app</a><br>
+              <small style="color:var(--text-muted);">Geopolitica, borse, commodity, macro radar</small>
+            </div>
+          </div>
+          <div class="layer-card">
+            <div class="layer-card-title">📊 CMV — Current Market Valuation</div>
+            <div class="layer-card-body">
+              <a href="https://currentmarketvaluation.com" target="_blank" style="color:var(--accent-cyan);font-family:var(--font-mono);font-size:10px;">currentmarketvaluation.com</a><br>
+              Buffett Indicator, CAPE P/E, P/S, Earnings Yield Gap<br>
+              Recessione: Yield Curve, Sahm Rule<br>
+              Sentiment: Margin Debt, VIX, Consumer Confidence
+            </div>
+          </div>
+          <div class="layer-card">
+            <div class="layer-card-title">📈 Finviz — Screening & Heatmap</div>
+            <div class="layer-card-body">
+              <a href="https://finviz.com" target="_blank" style="color:var(--accent-cyan);font-family:var(--font-mono);font-size:10px;">finviz.com</a><br>
+              Heatmap settoriale, futures, forex<br>
+              Screening azioni, pattern tecnici<br>
+              Insider trading, notizie
+            </div>
+          </div>
+          <div class="layer-card">
+            <div class="layer-card-title">🔬 Koyfin — Macro Dashboard</div>
+            <div class="layer-card-body">
+              <a href="https://koyfin.com" target="_blank" style="color:var(--accent-cyan);font-family:var(--font-mono);font-size:10px;">koyfin.com</a><br>
+              Dashboard macro, earnings transcripts<br>
+              Grafici avanzati, screener<br>
+              <span class="tag tag-blue">Piano Free</span>
+            </div>
+          </div>
+          <div class="layer-card">
+            <div class="layer-card-title">🌏 Teatri Geopolitici</div>
+            <div class="layer-card-body">
+              <span class="tag tag-cyan">Taiwan</span> Chip: NVDA, ASML, TSMC, LRCX<br>
+              <span class="tag tag-amber">Persian Gulf</span> Oil/Gold: XAUUSD, XTIUSD<br>
+              <span class="tag tag-blue">Baltic/EU</span> EUR/GBP stability
+            </div>
+          </div>
+          <div class="layer-card">
+            <div class="layer-card-title">⚡ Workflow L0 — Giornaliero</div>
+            <div class="layer-card-body">
+              <span class="tag tag-green">1</span> WorldMonitor → risk geopolitico<br>
+              <span class="tag tag-green">2</span> CMV → valuation mercato USA<br>
+              <span class="tag tag-green">3</span> Finviz → heatmap + futures<br>
+              <span class="tag tag-green">4</span> Koyfin → macro data
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="layer-content" data-layer="1">
+        <div class="layer-grid">
+          <div class="layer-card"><div class="layer-card-title">GS Screener</div><div class="layer-card-body">Valuation multiples, growth screen, quality factors, target 12m</div></div>
+          <div class="layer-card"><div class="layer-card-title">MS DCF Model</div><div class="layer-card-body">Discounted cash flow, intrinsic value, WACC, margin of safety</div></div>
+          <div class="layer-card"><div class="layer-card-title">Bridgewater Risk</div><div class="layer-card-body">Risk parity, all-weather, regime analysis, stress test</div></div>
+          <div class="layer-card"><div class="layer-card-title">JPMorgan Earnings</div><div class="layer-card-body">Earnings quality, revision momentum, surprise history, catalyst</div></div>
+          <div class="layer-card"><div class="layer-card-title">BlackRock Portfolio</div><div class="layer-card-body">Factor exposure, correlation matrix, risk budgeting, core/satellite</div></div>
+          <div class="layer-card"><div class="layer-card-title">Citadel Technical</div><div class="layer-card-body">MA/RSI/MACD/Fibonacci D/W/M multi-timeframe, R/R ratio</div></div>
+          <div class="layer-card"><div class="layer-card-title">Harvard Dividends</div><div class="layer-card-body">Dividend sustainability, payout ratio, DRIP, growth track</div></div>
+          <div class="layer-card"><div class="layer-card-title">Bain Competitive</div><div class="layer-card-body">Economic moat, competitive position, SWOT, market share</div></div>
+          <div class="layer-card"><div class="layer-card-title">Renaissance Quant</div><div class="layer-card-body">Statistical arbitrage, mean reversion, momentum, stagionalità</div></div>
+          <div class="layer-card"><div class="layer-card-title">McKinsey Macro</div><div class="layer-card-body">Sector rotation, business cycle positioning, thematic</div></div>
+          <div class="layer-card">
+            <div class="layer-card-title">🏛️ Dataroma — Superinvestors</div>
+            <div class="layer-card-body">
+              <a href="https://dataroma.com" target="_blank" style="color:var(--accent-cyan);font-family:var(--font-mono);font-size:10px;">dataroma.com</a><br>
+              82 Superinvestors via 13F filings<br>
+              Grand Portfolio ($958B aggregato)<br>
+              Buys/Sells trimestrali, insider real-time
+            </div>
+          </div>
+          <div class="layer-card">
+            <div class="layer-card-title">⚡ Workflow L1 — Settimanale</div>
+            <div class="layer-card-body">
+              <span class="tag tag-blue">1</span> Dataroma → 13F superinvestor activity<br>
+              <span class="tag tag-blue">2</span> Koyfin → earnings transcripts<br>
+              <span class="tag tag-blue">3</span> Finviz → insider trading + screener
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="layer-content" data-layer="2">
+        <div class="layer-grid">
+          <div class="layer-card"><div class="layer-card-title">Moving Averages</div><div class="layer-card-body"><span class="tag tag-green">MA 20</span><span class="tag tag-blue">MA 50</span><span class="tag tag-amber">MA 200</span><br>Golden Cross / Death Cross<br>Signal: prezzo vs MA stack</div></div>
+          <div class="layer-card"><div class="layer-card-title">RSI (14)</div><div class="layer-card-body"><span class="tag tag-green">&gt;70 Overbought</span><span class="tag tag-red">&lt;30 Oversold</span><br>Divergenza RSI/Prezzo → reversal<br>Multi-TF: D/W/M conferma</div></div>
+          <div class="layer-card"><div class="layer-card-title">MACD</div><div class="layer-card-body">MACD Line vs Signal Line<br>Histogram: momentum shift<br><span class="tag tag-purple">MACD-H divergence = A-Trade (Elder)</span></div></div>
+          <div class="layer-card"><div class="layer-card-title">Fibonacci</div><div class="layer-card-body">Ritracciamenti: 38.2%, 50%, 61.8%<br>Estensioni: 127.2%, 161.8%<br><span class="tag tag-amber">Confluenza con S/R = high prob</span></div></div>
+          <div class="layer-card"><div class="layer-card-title">Elder Triple Screen</div><div class="layer-card-body"><span class="tag tag-blue">W: Trend</span><span class="tag tag-green">D: Timing</span><span class="tag tag-amber">H: Entry</span><br>Impulse System: Verde/Rosso/Blu<br>Force Index 2g + 13g</div></div>
+          <div class="layer-card"><div class="layer-card-title">Risk Management</div><div class="layer-card-body"><span class="tag tag-red">2% Rule (per trade)</span><span class="tag tag-red">6% Rule (mensile)</span><br>Iron Triangle: Stop + Size + Risk<br>ATR channels → uscita in terzi</div></div>
+          <div class="layer-card">
+            <div class="layer-card-title">🔎 Finviz Screener</div>
+            <div class="layer-card-body">
+              Pattern recognition tecnico<br>
+              Screener per setup D/W/M<br>
+              Conferma pattern con statistiche
+            </div>
+          </div>
+          <div class="layer-card">
+            <div class="layer-card-title">📉 Koyfin Charts</div>
+            <div class="layer-card-body">
+              Grafici avanzati D/W/M<br>
+              MA/RSI/MACD/Fibonacci overlay<br>
+              Comparazione multi-asset
+            </div>
+          </div>
+          <div class="layer-card">
+            <div class="layer-card-title">⚡ Workflow L2 — Settimanale</div>
+            <div class="layer-card-body">
+              <span class="tag tag-purple">1</span> Finviz screener → pattern tecnici<br>
+              <span class="tag tag-purple">2</span> Koyfin grafici → conferma D/W/M
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="layer-content" data-layer="3">
+        <div class="layer-grid">
+          <div class="layer-card"><div class="layer-card-title">Murphy — Intermarket ✅</div><div class="layer-card-body">B1: Dow/Trend/Fibonacci | B2: Pattern/Volume/OBV<br>B3: MA/RSI/MACD/Elliott | B4: Intermarket<br>Dollaro↓→Commodity↑→Bond↓→Azioni↑<br><span class="tag tag-amber">DXY</span><span class="tag tag-blue">US10Y</span><span class="tag tag-red">VIX</span><span class="tag tag-green">GOLD</span></div></div>
+          <div class="layer-card"><div class="layer-card-title">Wyckoff L1+L2 ✅</div><div class="layer-card-body">Fasi A-E, Spring/UTAD, CHoCH, Creek<br>VP: VPOC, VAH/VAL, VWAP, HVN/LVN<br>Order Flow: Delta, Footprint<br><span class="tag tag-green">Spring su LVN → Buy</span><span class="tag tag-red">SOS su HVN</span></div></div>
+          <div class="layer-card"><div class="layer-card-title">Nison — Candlestick ✅</div><div class="layer-card-body">Pattern reversal + continuation (248pp)<br>Kagi: Yang/Yin, Multi-Level Break<br>Kagi+TLB+Renko=macro trend<br>Candele=micro entry timing</div></div>
+          <div class="layer-card"><div class="layer-card-title">Douglas — Psicologia ✅</div><div class="layer-card-body">5 Verità Fondamentali · 7 Principi Consistenza<br>Esercizio 20 trades meccanici<br>Pensiero probabilistico, scala 1/3<br><span class="tag tag-red">Profilo: Boom&Bust → disciplina</span></div></div>
+          <div class="layer-card"><div class="layer-card-title">Elder x2 ✅</div><div class="layer-card-body"><b>New Trading for a Living</b> (303pp)<br>Triple Screen W→D→H, Impulse System<br><span class="tag tag-purple">A-Trade: False BO + MACD-H div</span><br>NH-NL Index, Trade Apgar, 2%/6% Rule<br><b>Study Guide E&E</b> (176pp, 101 domande)<br>Trade Grade ≥30%=A, nel dubbio riduci size</div></div>
+          <div class="layer-card"><div class="layer-card-title">Schwager — Market Wizards ✅</div><div class="layer-card-body">411pp, 17 interviste trader leggendari<br>5 Credenze Tharp, CANSLIM O'Neil<br>Difesa &gt; attacco, max loss 5-7%<br>Mai mediare, variant perception<br><span class="tag tag-cyan">Intuizione = esperienza subconscia</span></div></div>
+          <div class="layer-card"><div class="layer-card-title">Bulkowski 📚 DA STUDIARE</div><div class="layer-card-body">Encyclopedia of Chart Patterns 3ª ed.<br>Encyclopedia of Candlestick Charts<br><span class="tag tag-amber">Pattern recognition + statistiche</span><br><small>Prossimo studio da completare</small></div></div>
+          <div class="layer-card">
+            <div class="layer-card-title">⚡ Workflow L3 — Pre-Trade</div>
+            <div class="layer-card-body">
+              <span class="tag tag-green">1</span> Koyfin deep (Wyckoff/Volume/TripleScreen)<br>
+              <span class="tag tag-green">2</span> Finviz conferma pattern<br>
+              <span class="tag tag-green">3</span> CMV intermarket (Murphy B4)<br>
+              <span class="tag tag-green">4</span> WorldMonitor risk geopolitico
+            </div>
+          </div>
+          <div class="layer-card">
+            <div class="layer-card-title">🎯 Segnale Buy Integrato</div>
+            <div class="layer-card-body">
+              DXY↓ + US10Y↓ + VIX&lt;20 + Oro stabile<br>
+              + CMV non all-red<br>
+              + Dataroma accumulation<br>
+              + Pattern tecnico confermato<br>
+              <span class="tag tag-green">= GO</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="right-panel">
+    <!-- AI ANALYSIS -->
+    <div>
+      <div class="panel-header">
+        <span>🤖 AI ANALYSIS</span>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="api-status disconnected" id="apiStatus">● DISCONNESSO</span>
+          <button class="settings-btn" onclick="openSettings()">⚙ API KEY</button>
+        </div>
+      </div>
+      <div class="ai-input-area">
+        <input class="ai-input" id="aiInput" placeholder="Analizza EURUSD con tutti i layer..." />
+        <button class="ai-btn" id="aiBtn" onclick="runAI()">▶ RUN</button>
+      </div>
+      <div class="ai-output" id="aiOutput">
+        <span style="color:var(--text-muted);font-style:italic;">Clicca ⚙ API KEY per inserire la tua Anthropic API key e attivare l'analisi AI con i layer L0-L3.</span>
+      </div>
+    </div>
+
+    <!-- DEGIRO -->
+    <div>
+      <div class="panel-header">
+        <span>💼 DEGIRO — Recovery</span>
+        <span style="font-size:8px;color:var(--accent-red)">P/L -€692.44</span>
+      </div>
+      <div>
+        <div class="portfolio-item" style="background:var(--bg-tertiary);font-weight:600;">
+          <span class="sym" style="font-size:10px;">TICKER</span>
+          <span class="qty" style="font-size:9px;">QTY</span>
+          <span class="val" style="font-size:9px;">PMC</span>
+          <span class="pnl" style="font-size:9px;">STATUS</span>
+        </div>
+        <div class="portfolio-item"><span class="sym">ABNB</span><span class="qty">x2</span><span class="val">€111.46</span><span class="pnl down">HOLD</span></div>
+        <div class="portfolio-item"><span class="sym">LRCX</span><span class="qty">x2</span><span class="val">$220.31</span><span class="pnl down">HOLD</span></div>
+        <div class="portfolio-item"><span class="sym">NVDA</span><span class="qty">x1</span><span class="val">€155.74</span><span class="pnl down">HOLD</span></div>
+        <div class="portfolio-item"><span class="sym">ROKU</span><span class="qty">x3</span><span class="val">€82.07</span><span class="pnl down">BUY 5x@77</span></div>
+        <div class="portfolio-item" style="opacity:0.4;"><span class="sym">PYPL</span><span class="qty">x8</span><span class="val">€38.01</span><span class="pnl up">VENDUTO @38.50 ✓</span></div>
+      </div>
+      <div style="padding:6px 12px;font-size:9px;color:var(--text-muted);font-family:var(--font-mono);border-top:1px solid var(--border);">
+        Ordini aperti: ROKU BUY 5x@€77 · NVDA BUY 1x@€148 + 1x@€145
+      </div>
+      <div style="padding:8px 12px;font-family:var(--font-mono);font-size:11px;border-top:1px solid var(--border);">
+        <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-muted)">Portfolio:</span><span>€1,038.42</span></div>
+        <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-muted)">Cash:</span><span>€3,702.13</span></div>
+        <div style="display:flex;justify-content:space-between;margin-top:4px;padding-top:4px;border-top:1px solid var(--border);"><span style="color:var(--accent-amber);font-weight:700;">TOTALE:</span><span style="color:var(--accent-amber);font-weight:700;">€4,740.55</span></div>
+      </div>
+      <div style="padding:4px 12px 8px;font-family:var(--font-mono);font-size:9px;color:var(--text-muted);">
+        Aggiornato: 25/03/2026 · Review settimanale
+      </div>
+    </div>
+
+    <!-- PAC -->
+    <div>
+      <div class="panel-header">
+        <span>📈 PAC Trade Republic</span>
+        <span style="font-size:8px;color:var(--accent-green)">€200/mese</span>
+      </div>
+      <div style="padding:8px 12px;font-size:11px;">
+        <div style="display:flex;justify-content:space-between;padding:2px 0;"><span style="font-family:var(--font-mono);">CW8 65%</span><span style="font-family:var(--font-mono);color:var(--accent-green);">€130/m</span></div>
+        <div style="display:flex;justify-content:space-between;padding:2px 0;"><span style="font-family:var(--font-mono);">WSML 15%</span><span style="font-family:var(--font-mono);color:var(--accent-green);">€30/m</span></div>
+        <div style="display:flex;justify-content:space-between;padding:2px 0;"><span style="font-family:var(--font-mono);">EM ex-China 20%</span><span style="font-family:var(--font-mono);color:var(--accent-green);">€40/m</span></div>
+        <div style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border);font-family:var(--font-mono);font-size:10px;color:var(--text-muted);">
+          Orizzonte 15y · Esecuzione il 16 · TER 0.32%
+        </div>
+        <div style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border);font-size:10px;">
+          <div style="font-family:var(--font-mono);font-weight:600;color:var(--accent-cyan);margin-bottom:3px;">LUMP SUM ANTICIPATO</div>
+          <div style="display:flex;justify-content:space-between;padding:1px 0;font-family:var(--font-mono);"><span style="color:var(--text-muted);">Tranche 1</span><span style="color:var(--accent-green);">€500 ✓</span></div>
+          <div style="display:flex;justify-content:space-between;padding:1px 0;font-family:var(--font-mono);"><span style="color:var(--text-muted);">Tranche 2</span><span style="color:var(--accent-amber);">€500 — ~2 settimane</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <div><span class="status-dot green"></span> Enzo Stock Exchange · Bloombenz Platform — by Vincenzo Minicozzi</div>
+  <div>TradingView Free Widgets · Tassazione IT 26% · Review settimanale</div>
+</div>
+
+<script>
+// ===== CONFIG =====
+let API_KEY = localStorage.getItem('ese_api_key') || '';
+let currentTF = 'D';
+let currentTvSymbol = 'FX:EURUSD';
+let currentDisplayName = 'EURUSD';
+
+// ===== CLOCK =====
+function updateClock() {
+  const now = new Date();
+  document.getElementById('clock').textContent =
+    now.toLocaleDateString('it-IT',{weekday:'short',day:'2-digit',month:'short',year:'numeric'}) + '  ' +
+    now.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false,timeZone:'Europe/Rome'});
+}
+updateClock();
+setInterval(updateClock, 1000);
+
+// ===== INSTRUMENT DATA =====
+const instruments = {
+  forex: [
+    { symbol:'EURUSD', tv:'FX:EURUSD' },
+    { symbol:'GBPUSD', tv:'FX:GBPUSD' },
+    { symbol:'USDJPY', tv:'FX:USDJPY' },
+    { symbol:'NZDUSD', tv:'FX:NZDUSD' },
+    { symbol:'EURGBP', tv:'FX:EURGBP' },
+    { symbol:'AUDCAD', tv:'FX:AUDCAD' },
+  ],
+  commodities: [
+    { symbol:'XAUUSD', tv:'TVC:GOLD', label:'Gold' },
+    { symbol:'XAGUSD', tv:'TVC:SILVER', label:'Silver' },
+    { symbol:'USOIL',  tv:'TVC:USOIL', label:'WTI Oil' },
+    { symbol:'WHEAT',  tv:'TVC:WHEAT', label:'Wheat' },
+    { symbol:'CORN',   tv:'AMEX:CORN', label:'Corn' },
+    { symbol:'SOYBEAN',tv:'AMEX:SOYB', label:'Soybean' },
+    { symbol:'COCOA',  tv:'TVC:CC1!', label:'Cocoa' },
+    { symbol:'COFFEE', tv:'TVC:KC1!', label:'Coffee' },
+  ],
+  indices: [
+    { symbol:'DXY',   tv:'TVC:DXY', label:'Dollar Index' },
+    { symbol:'VIX',   tv:'CBOE:VIX', label:'Fear Index' },
+    { symbol:'US10Y', tv:'TVC:US10Y', label:'US 10Y Yield' },
+    { symbol:'SPX',   tv:'FOREXCOM:SPX500', label:'S&P 500' },
+    { symbol:'NDX',   tv:'PEPPERSTONE:NAS100', label:'Nasdaq 100' },
+  ],
+  stocks: [
+    { symbol:'ABNB', tv:'NASDAQ:ABNB', label:'Airbnb' },
+    { symbol:'LRCX', tv:'NASDAQ:LRCX', label:'Lam Research' },
+    { symbol:'NVDA', tv:'NASDAQ:NVDA', label:'NVIDIA' },
+    { symbol:'ROKU', tv:'NASDAQ:ROKU', label:'Roku' },
+  ],
+  etfs: [
+    { symbol:'CW8', tv:'EURONEXT:CW8', label:'Amundi MSCI World' },
+    { symbol:'WSML', tv:'XETR:WSML', label:'SPDR World Small Cap' },
+    { symbol:'FLXE', tv:'XETR:FLXE', label:'Franklin EM ex-China' },
+  ],
+  watchTargets: [
+    { symbol:'BNAI', tv:'NASDAQ:BNAI', label:'Brand Engagement Net.' },
+    { symbol:'AMD', tv:'NASDAQ:AMD', label:'AMD' },
+    { symbol:'META', tv:'NASDAQ:META', label:'Meta Platforms' },
+    { symbol:'GOOGL', tv:'NASDAQ:GOOGL', label:'Alphabet' },
+  ]
+};
+
+// ===== WATCHLIST BUILD =====
+function randChange() { return ((Math.random()-0.45)*3).toFixed(2); }
+
+function buildWatchlist(items, containerId) {
+  const container = document.getElementById(containerId);
+  items.forEach(item => {
+    const chg = randChange();
+    const isUp = parseFloat(chg) >= 0;
+    const div = document.createElement('div');
+    div.className = 'watchlist-item';
+    div.dataset.tv = item.tv;
+    div.dataset.name = item.label || item.symbol;
+    div.innerHTML = `
+      <div><span class="wl-symbol">${item.label || item.symbol}</span>${item.label ? `<br><span class="wl-name">${item.symbol}</span>` : ''}</div>
+      <span class="wl-change ${isUp?'up':'down'}">${isUp?'+':''}${chg}%</span>
+    `;
+    div.addEventListener('click', function() {
+      loadChart(this.dataset.tv, this.dataset.name);
+      document.querySelectorAll('.watchlist-item').forEach(el => el.classList.remove('active'));
+      this.classList.add('active');
+    });
+    container.appendChild(div);
+  });
+}
+
+buildWatchlist(instruments.forex, 'forexList');
+buildWatchlist(instruments.commodities, 'commoditiesList');
+buildWatchlist(instruments.indices, 'indicesList');
+buildWatchlist(instruments.stocks, 'stocksList');
+buildWatchlist(instruments.watchTargets, 'watchTargetsList');
+buildWatchlist(instruments.etfs, 'etfList');
+
+const totalCount = Object.values(instruments).reduce((s,a) => s+a.length, 0);
+document.getElementById('watchCount').textContent = totalCount + ' strumenti';
+
+// ===== TICKER TAPE =====
+(function buildTicker() {
+  const all = [...instruments.forex, ...instruments.commodities.slice(0,3), ...instruments.indices.slice(0,3), ...instruments.stocks, ...instruments.watchTargets, ...instruments.etfs];
+  const ticker = document.getElementById('tickerScroll');
+  for (let i = 0; i < 2; i++) {
+    all.forEach(item => {
+      const chg = randChange();
+      const isUp = parseFloat(chg) >= 0;
+      const span = document.createElement('div');
+      span.className = 'ticker-item';
+      span.innerHTML = `<span class="ticker-symbol">${item.symbol}</span><span class="ticker-change ${isUp?'up':'down'}">${isUp?'▲':'▼'} ${Math.abs(chg)}%</span>`;
+      ticker.appendChild(span);
+    });
+  }
+})();
+
+// ===== CLOSE MACRO CALENDAR =====
+function closeMacro() {
+  document.getElementById('macroOverlay').classList.remove('open');
+  document.querySelector('.main-layout').style.display = 'grid';
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.querySelector('.nav-tab[data-view="dashboard"]').classList.add('active');
+}
+
+// ===== CLOSE JOURNAL =====
+function closeJournal() {
+  document.getElementById('journalOverlay').classList.remove('open');
+  document.querySelector('.main-layout').style.display = 'grid';
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.querySelector('.nav-tab[data-view="dashboard"]').classList.add('active');
+}
+
+// ===== TRADINGVIEW CHART =====
+function loadChart(tvSymbol, displayName) {
+  currentTvSymbol = tvSymbol;
+  currentDisplayName = displayName || tvSymbol;
+  document.getElementById('chartSymbolName').textContent = currentDisplayName;
+
+  const container = document.getElementById('chartContainer');
+  // Use TradingView Advanced Chart Widget via innerHTML to avoid iframe src encoding issues
+  container.innerHTML = '';
+
+  const widgetDiv = document.createElement('div');
+  widgetDiv.className = 'tradingview-widget-container';
+  widgetDiv.style.height = '100%';
+  widgetDiv.style.width = '100%';
+
+  const innerDiv = document.createElement('div');
+  innerDiv.id = 'tv_chart_widget';
+  innerDiv.style.height = '100%';
+  innerDiv.style.width = '100%';
+  widgetDiv.appendChild(innerDiv);
+
+  container.appendChild(widgetDiv);
+
+  const script = document.createElement('script');
+  script.src = 'https://s3.tradingview.com/tv.js';
+  script.onload = function() {
+    if (typeof TradingView !== 'undefined') {
+      new TradingView.widget({
+        "autosize": true,
+        "symbol": tvSymbol,
+        "interval": currentTF,
+        "timezone": "Europe/Rome",
+        "theme": "dark",
+        "style": "1",
+        "locale": "it",
+        "toolbar_bg": "#0a0e17",
+        "enable_publishing": false,
+        "allow_symbol_change": true,
+        "save_image": true,
+        "studies": ["MASimple@tv-basicstudies|20","MASimple@tv-basicstudies|50","MASimple@tv-basicstudies|200","RSI@tv-basicstudies","MACD@tv-basicstudies"],
+        "container_id": "tv_chart_widget",
+        "hide_side_toolbar": false,
+        "withdateranges": true,
+        "backgroundColor": "#0a0e17",
+        "gridColor": "#151c2c"
+      });
+    }
+  };
+  document.head.appendChild(script);
+}
+
+// Initial chart
+loadChart('FX:EURUSD', 'EURUSD');
+document.querySelector('.watchlist-item')?.classList.add('active');
+
+// TF buttons
+document.querySelectorAll('.tf-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentTF = btn.dataset.tf;
+    loadChart(currentTvSymbol, currentDisplayName);
+  });
+});
+
+// Nav tabs
+document.querySelectorAll('.nav-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    const v = tab.dataset.view;
+
+    const macroOv = document.getElementById('macroOverlay');
+    const journalOv = document.getElementById('journalOverlay');
+    const mainLayout = document.querySelector('.main-layout');
+
+    macroOv.classList.remove('open');
+    journalOv.classList.remove('open');
+    mainLayout.style.display = 'grid';
+
+    if (v === 'macro') {
+      macroOv.classList.add('open');
+      mainLayout.style.display = 'none';
+      renderMacroCalendar();
+    } else if (v === 'journal') {
+      journalOv.classList.add('open');
+      mainLayout.style.display = 'none';
+      renderJournal();
+    } else {
+      if (v === 'forex') loadChart('FX:EURUSD', 'EURUSD');
+      else if (v === 'commodities') loadChart('TVC:GOLD', 'Gold');
+      else if (v === 'stocks') loadChart('NASDAQ:NVDA', 'NVDA');
+    }
+  });
+});
+
+// Layer tabs
+document.querySelectorAll('.layer-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.layer-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.layer-content').forEach(c => c.classList.remove('active'));
+    tab.classList.add('active');
+    document.querySelector(`.layer-content[data-layer="${tab.dataset.layer}"]`).classList.add('active');
+  });
+});
+
+// ===== SETTINGS MODAL =====
+function openSettings() { document.getElementById('settingsModal').classList.add('open'); document.getElementById('apiKeyInput').value = API_KEY; }
+function closeSettings() { document.getElementById('settingsModal').classList.remove('open'); }
+
+function saveApiKey() {
+  API_KEY = document.getElementById('apiKeyInput').value.trim();
+  localStorage.setItem('ese_api_key', API_KEY);
+  closeSettings();
+  updateApiStatus();
+}
+
+function updateApiStatus() {
+  const el = document.getElementById('apiStatus');
+  if (API_KEY) {
+    el.className = 'api-status connected';
+    el.textContent = '● CONNESSO';
+  } else {
+    el.className = 'api-status disconnected';
+    el.textContent = '● DISCONNESSO';
+  }
+}
+updateApiStatus();
+
+// Close modal on overlay click
+document.getElementById('settingsModal').addEventListener('click', function(e) {
+  if (e.target === this) closeSettings();
+});
+
+// ===== CLAUDE AI INTEGRATION =====
+const SYSTEM_PROMPT = `Sei l'AI integrata nella piattaforma "Enzo Stock Exchange — Bloombenz Platform" — il terminal di trading personale di Vincenzo (Enzo) Minicozzi, trader italiano basato a Benevento.
+
+Devi SEMPRE analizzare usando TUTTI e 4 i layer, nessuno escluso:
+
+**L0 — WORLD MONITOR + CMV + FINVIZ + KOYFIN (Giornaliero)**
+Workflow: WorldMonitor → CMV → Finviz → Koyfin.
+WorldMonitor: finance/commodity/tech.worldmonitor.app — geopolitica, borse, macro radar.
+Teatri: Taiwan (chip → NVDA, ASML, TSMC, LRCX), Persian Gulf (oil/gold → XAUUSD, XTIUSD, risk-off), Baltic (EUR/GBP stability).
+CMV (currentmarketvaluation.com): Buffett Indicator, CAPE P/E, P/S, Interest Rate Model, Earnings Yield Gap, Yield Curve, Sahm Rule, Margin Debt, VIX, Consumer Confidence.
+Finviz: Heatmap settoriale, futures, forex overview, insider trading.
+Koyfin: Dashboard macro, dati economici, earnings calendar.
+
+**L1 — 10 FRAMEWORK ISTITUZIONALI + DATAROMA + KOYFIN + FINVIZ (Settimanale)**
+GS Screener, MS DCF, Bridgewater Risk, JPMorgan Earnings, BlackRock Portfolio, Citadel Technical, Harvard Dividends, Bain Competitive, Renaissance Quant, McKinsey Macro.
+Dataroma (dataroma.com): 82 Superinvestors via 13F, Grand Portfolio $958B, buys/sells trimestrali, insider real-time.
+Koyfin: Earnings transcripts, fundamental data.
+Finviz: Insider trading, screener fondamentale.
+Workflow settimanale: Dataroma → Koyfin → Finviz.
+
+**L2 — CITADEL TECHNICAL + FINVIZ SCREENER + KOYFIN CHARTS (Settimanale)**
+MA 20/50/200, Golden/Death Cross, RSI 14, MACD + MACD-H divergence (= A-Trade Elder), Fibonacci (38.2/50/61.8%), Elder Triple Screen (W=trend, D=timing, H=entry), Impulse System, Force Index 2g+13g. Risk: 2% Rule per trade, 6% Rule mensile, Iron Triangle, ATR channels uscita in terzi.
+Finviz screener: Pattern tecnici, setup identification.
+Koyfin grafici: Analisi D/W/M con overlay indicatori.
+Workflow: Finviz screener → Koyfin grafici conferma.
+
+**L3 — MASTER: Tutti i libri studiati + tutti i siti integrati (Pre-Trade)**
+Murphy (100% completo): B1 Dow/Trend/Fib | B2 Pattern/Volume/OBV | B3 MA/RSI/MACD/Elliott | B4 Intermarket (Dollaro↓→Commodity↑→Bond↓→Azioni↑), Rotazione Settoriale 4 fasi, DXY+US10Y+VIX+Oro segnali guida.
+Wyckoff L1+L2 (Villahermosa, 273+317pp): Fasi A-E, Spring (buy), UTAD (sell), CHoCH, Creek. VP: VPOC, VAH/VAL, VWAP, HVN/LVN. Order Flow: Delta, Footprint. Dark Pools/HFT.
+Nison (248pp): Pattern candlestick, Kagi Yang/Yin, Multi-Level Break, Kagi+TLB+Renko=macro, Candele=micro.
+Douglas (140pp): 5 Verità, 7 Principi Consistenza, pensiero probabilistico, profilo Boom&Bust, scala uscite 1/3.
+Elder x2: New Trading for a Living (303pp) + Study Guide E&E (176pp, 101 domande). Triple Screen, A-Trade (False BO + MACD-H div), NH-NL Index, Trade Apgar, Daily Homework, 2%/6% Rule, Trade Grade.
+Schwager Market Wizards (411pp): 17 interviste, 5 credenze Tharp, CANSLIM O'Neil, difesa>attacco, max loss 5-7%, mai mediare, variant perception, intuizione=esperienza subconscia.
+Bulkowski: Encyclopedia Chart Patterns + Candlestick Charts — DA STUDIARE.
+Workflow pre-trade: Koyfin deep (Wyckoff/Volume/TripleScreen) → Finviz conferma pattern → CMV intermarket (Murphy B4) → WorldMonitor risk geopolitico.
+
+**SEGNALE BUY INTEGRATO**: DXY↓ + US10Y↓ + VIX<20 + Oro stabile + CMV non all-red + Dataroma accumulation + Pattern tecnico confermato = GO.
+
+**FOREX OBBLIGATORIO**: Analizza effetti su USD e coppie: EURUSD, NZDUSD, EURGBP, AUDCAD, GBPUSD, USDJPY.
+**COMMODITIES OBBLIGATORIE**: XAUUSD, XAGUSD, XTIUSD, WHEAT, CORN, SOYBEAN, COCOA, COFFEE.
+**SENTIMENT**: VIX — lettura risk-on/off, correlato a USDJPY, XAUUSD, AUD/NZD.
+**TASSAZIONE**: Italia 26% su plusvalenze.
+
+Rispondi in italiano, in modo diretto e operativo. Usa emoji per i segnali (🟢 bullish, 🔴 bearish, 🟡 neutral). Dai rating e target price quando possibile.`;
+
+async function runAI() {
+  const input = document.getElementById('aiInput').value.trim();
+  const output = document.getElementById('aiOutput');
+
+  if (!input) return;
+
+  if (!API_KEY) {
+    output.innerHTML = '<span style="color:var(--accent-red);">⚠️ API Key non configurata.</span>\n\nClicca <b>⚙ API KEY</b> in alto per inserire la tua Anthropic API key.\nOttienila da console.anthropic.com → API Keys.';
+    return;
+  }
+
+  const btn = document.getElementById('aiBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳';
+  output.innerHTML = '<span class="thinking-anim">🧠 Analisi L0→L3 in corso</span>\n\n<span style="color:var(--text-muted);font-size:11px;">Applicando: World Monitor → 10 Framework → Citadel Technical → Murphy/Wyckoff/Nison/Douglas/Elder/Bulkowski</span>';
+
+  // Add current chart context
+  const contextMsg = `[CONTESTO ATTUALE: Grafico aperto su ${currentDisplayName} (${currentTvSymbol}), timeframe ${currentTF}]
+
+${input}`;
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': API_KEY,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 4096,
+        system: SYSTEM_PROMPT,
+        messages: [{ role: 'user', content: contextMsg }]
+      })
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.error?.message || `HTTP ${response.status}`);
+    }
+
+    const data = await response.json();
+    const text = data.content
+      .filter(b => b.type === 'text')
+      .map(b => b.text)
+      .join('\n');
+
+    // Simple markdown-like formatting
+    output.innerHTML = formatAIResponse(text);
+
+  } catch (err) {
+    output.innerHTML = `<span style="color:var(--accent-red);">❌ Errore: ${err.message}</span>\n\n<span style="color:var(--text-muted);font-size:11px;">Verifica che la API key sia corretta e che il tuo account abbia crediti disponibili.</span>`;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '▶ RUN';
+  }
+}
+
+function formatAIResponse(text) {
+  return text
+    .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
+    .replace(/^### (.*$)/gm, '<b style="color:var(--accent-cyan);font-size:13px;">$1</b>')
+    .replace(/^## (.*$)/gm, '<b style="color:var(--accent-green);font-size:14px;">$1</b>')
+    .replace(/^# (.*$)/gm, '<b style="color:var(--accent-amber);font-size:15px;">$1</b>')
+    .replace(/🟢/g, '<span style="color:var(--accent-green);">🟢</span>')
+    .replace(/🔴/g, '<span style="color:var(--accent-red);">🔴</span>')
+    .replace(/🟡/g, '<span style="color:var(--accent-amber);">🟡</span>');
+}
+
+// Enter key
+document.getElementById('aiInput').addEventListener('keypress', e => {
+  if (e.key === 'Enter') runAI();
+});
+
+// ===== MACRO CALENDAR 2026 =====
+const macroEvents = [
+  // FOMC 2026 — Tomato red, 20:00 CEST / 19:00 CET
+  { date:'2026-03-18', time:'20:00', type:'fomc', name:'FOMC Decisione Tassi', note:'Con SEP + Dot Plot', sep:true },
+  { date:'2026-04-29', time:'20:00', type:'fomc', name:'FOMC Decisione Tassi', note:'', sep:false },
+  { date:'2026-06-17', time:'20:00', type:'fomc', name:'FOMC Decisione Tassi', note:'Con SEP + Dot Plot', sep:true },
+  { date:'2026-07-29', time:'20:00', type:'fomc', name:'FOMC Decisione Tassi', note:'', sep:false },
+  { date:'2026-09-16', time:'20:00', type:'fomc', name:'FOMC Decisione Tassi', note:'Con SEP + Dot Plot', sep:true },
+  { date:'2026-10-28', time:'19:00', type:'fomc', name:'FOMC Decisione Tassi', note:'19:00 CET (ora solare)', sep:false },
+  { date:'2026-12-09', time:'19:00', type:'fomc', name:'FOMC Decisione Tassi', note:'Con SEP + Dot Plot', sep:true },
+
+  // ECB 2026
+  { date:'2026-03-19', time:'14:15', type:'ecb', name:'ECB Decisione Tassi', note:'Conferenza Lagarde 14:45' },
+  { date:'2026-04-30', time:'14:15', type:'ecb', name:'ECB Decisione Tassi', note:'Conferenza Lagarde 14:45' },
+  { date:'2026-06-11', time:'14:15', type:'ecb', name:'ECB Decisione Tassi', note:'Conferenza Lagarde 14:45' },
+  { date:'2026-07-23', time:'14:15', type:'ecb', name:'ECB Decisione Tassi', note:'Conferenza Lagarde 14:45' },
+  { date:'2026-09-10', time:'14:15', type:'ecb', name:'ECB Decisione Tassi', note:'Conferenza Lagarde 14:45' },
+  { date:'2026-10-29', time:'14:15', type:'ecb', name:'ECB Decisione Tassi', note:'Conferenza Lagarde 14:45' },
+  { date:'2026-12-17', time:'14:15', type:'ecb', name:'ECB Decisione Tassi', note:'Conferenza Lagarde 14:45' },
+
+  // CPI USA 2026 (stime date, tipicamente 10-15 del mese, 14:30 CEST)
+  { date:'2026-01-14', time:'14:30', type:'cpi', name:'CPI USA Dicembre', note:'14:30 CEST' },
+  { date:'2026-02-11', time:'14:30', type:'cpi', name:'CPI USA Gennaio', note:'14:30 CEST' },
+  { date:'2026-03-11', time:'14:30', type:'cpi', name:'CPI USA Febbraio', note:'14:30 CEST' },
+  { date:'2026-04-14', time:'14:30', type:'cpi', name:'CPI USA Marzo', note:'14:30 CEST' },
+  { date:'2026-05-13', time:'14:30', type:'cpi', name:'CPI USA Aprile', note:'14:30 CEST' },
+  { date:'2026-06-10', time:'14:30', type:'cpi', name:'CPI USA Maggio', note:'14:30 CEST' },
+  { date:'2026-07-14', time:'14:30', type:'cpi', name:'CPI USA Giugno', note:'14:30 CEST' },
+  { date:'2026-08-12', time:'14:30', type:'cpi', name:'CPI USA Luglio', note:'14:30 CEST' },
+  { date:'2026-09-11', time:'14:30', type:'cpi', name:'CPI USA Agosto', note:'14:30 CEST' },
+  { date:'2026-10-13', time:'14:30', type:'cpi', name:'CPI USA Settembre', note:'14:30 CEST' },
+
+  // PPI USA 2026 (stime date, tipicamente 12-15 del mese)
+  { date:'2026-01-15', time:'14:30', type:'ppi', name:'PPI USA Dicembre', note:'14:30 CEST' },
+  { date:'2026-02-13', time:'14:30', type:'ppi', name:'PPI USA Gennaio', note:'14:30 CEST' },
+  { date:'2026-03-12', time:'14:30', type:'ppi', name:'PPI USA Febbraio', note:'14:30 CEST' },
+  { date:'2026-04-10', time:'14:30', type:'ppi', name:'PPI USA Marzo', note:'14:30 CEST' },
+  { date:'2026-05-14', time:'14:30', type:'ppi', name:'PPI USA Aprile', note:'14:30 CEST' },
+  { date:'2026-06-11', time:'14:30', type:'ppi', name:'PPI USA Maggio', note:'14:30 CEST' },
+  { date:'2026-07-16', time:'14:30', type:'ppi', name:'PPI USA Giugno', note:'14:30 CEST' },
+  { date:'2026-08-13', time:'14:30', type:'ppi', name:'PPI USA Luglio', note:'14:30 CEST' },
+  { date:'2026-09-15', time:'14:30', type:'ppi', name:'PPI USA Agosto', note:'14:30 CEST' },
+  { date:'2026-10-15', time:'14:30', type:'ppi', name:'PPI USA Settembre', note:'14:30 CEST' },
+
+  // NFP 2026 (1° venerdì del mese, 14:30 CEST)
+  { date:'2026-01-09', time:'14:30', type:'nfp', name:'Non-Farm Payrolls Dicembre', note:'14:30 CEST' },
+  { date:'2026-02-06', time:'14:30', type:'nfp', name:'Non-Farm Payrolls Gennaio', note:'14:30 CEST' },
+  { date:'2026-03-06', time:'14:30', type:'nfp', name:'Non-Farm Payrolls Febbraio', note:'14:30 CEST' },
+  { date:'2026-04-03', time:'14:30', type:'nfp', name:'Non-Farm Payrolls Marzo', note:'14:30 CEST' },
+  { date:'2026-05-08', time:'14:30', type:'nfp', name:'Non-Farm Payrolls Aprile', note:'14:30 CEST' },
+  { date:'2026-06-05', time:'14:30', type:'nfp', name:'Non-Farm Payrolls Maggio', note:'14:30 CEST' },
+  { date:'2026-07-02', time:'14:30', type:'nfp', name:'Non-Farm Payrolls Giugno', note:'14:30 CEST' },
+  { date:'2026-08-07', time:'14:30', type:'nfp', name:'Non-Farm Payrolls Luglio', note:'14:30 CEST' },
+  { date:'2026-09-04', time:'14:30', type:'nfp', name:'Non-Farm Payrolls Agosto', note:'14:30 CEST' },
+
+  // GDP USA Advance Estimates 2026
+  { date:'2026-04-30', time:'14:30', type:'gdp', name:'GDP USA Q1 (Advance)', note:'Stima anticipata PIL' },
+  { date:'2026-07-30', time:'14:30', type:'gdp', name:'GDP USA Q2 (Advance)', note:'Stima anticipata PIL' },
+  { date:'2026-10-29', time:'14:30', type:'gdp', name:'GDP USA Q3 (Advance)', note:'Stima anticipata PIL' },
+];
+
+// Sort by date
+macroEvents.sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
+
+let macroFilter = 'all';
+
+function renderMacroCalendar() {
+  const timeline = document.getElementById('macroTimeline');
+  const now = new Date();
+  let nextEvent = null;
+
+  // Filter events
+  const filtered = macroFilter === 'all'
+    ? macroEvents
+    : macroEvents.filter(e => e.type === macroFilter);
+
+  // Find next upcoming event (from all, not filtered)
+  for (const ev of macroEvents) {
+    const evDate = new Date(ev.date + 'T' + ev.time + ':00');
+    if (evDate > now) { nextEvent = ev; break; }
+  }
+
+  // Update countdown
+  if (nextEvent) {
+    document.getElementById('nextEventName').textContent = nextEvent.name;
+    const evDate = new Date(nextEvent.date + 'T' + nextEvent.time + ':00');
+    document.getElementById('nextEventDate').textContent =
+      evDate.toLocaleDateString('it-IT', { weekday:'long', day:'numeric', month:'long', year:'numeric' }) + ' — ' + nextEvent.time;
+    updateCountdown(evDate);
+  }
+
+  // Group by month
+  const months = {};
+  filtered.forEach(ev => {
+    const key = ev.date.substring(0, 7);
+    if (!months[key]) months[key] = [];
+    months[key].push(ev);
+  });
+
+  const monthNames = ['','Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+
+  let html = '';
+  for (const [key, events] of Object.entries(months)) {
+    const [y, m] = key.split('-');
+    html += `<div class="macro-month-header">📅 ${monthNames[parseInt(m)]} ${y}</div>`;
+
+    events.forEach(ev => {
+      const evDate = new Date(ev.date + 'T' + ev.time + ':00');
+      const isPast = evDate < now;
+      const isNext = nextEvent && ev.date === nextEvent.date && ev.type === nextEvent.type;
+      const dayName = evDate.toLocaleDateString('it-IT', { weekday:'short' });
+      const dayNum = evDate.toLocaleDateString('it-IT', { day:'numeric', month:'short' });
+
+      // Days until
+      const diffMs = evDate - now;
+      const diffDays = Math.ceil(diffMs / (1000*60*60*24));
+      let countdownText = '';
+      if (isPast) {
+        countdownText = '✓ Passato';
+      } else if (diffDays === 0) {
+        countdownText = '🔴 OGGI';
+      } else if (diffDays === 1) {
+        countdownText = '🟡 Domani';
+      } else if (diffDays <= 7) {
+        countdownText = `🟢 ${diffDays}g`;
+      } else {
+        countdownText = `${diffDays}g`;
+      }
+
+      const sepTag = ev.sep ? ' <span class="tag tag-red" style="font-size:8px;">SEP+DOT PLOT</span>' : '';
+      const noteText = ev.note ? `<small> — ${ev.note}</small>` : '';
+
+      html += `
+        <div class="macro-event ${isPast ? 'past' : ''} ${isNext ? 'next' : ''}" data-type="${ev.type}">
+          <div class="macro-event-date">${dayName} ${dayNum}</div>
+          <div class="macro-event-badge badge-${ev.type}">${ev.type.toUpperCase()}</div>
+          <div class="macro-event-name">${ev.name}${sepTag}${noteText}</div>
+          <div class="macro-event-countdown">${countdownText}</div>
+        </div>
+      `;
+    });
+  }
+
+  timeline.innerHTML = html;
+}
+
+// Countdown timer
+function updateCountdown(targetDate) {
+  function tick() {
+    const now = new Date();
+    const diff = targetDate - now;
+    if (diff <= 0) {
+      document.getElementById('nextEventTime').textContent = '🔴 ORA!';
+      return;
+    }
+    const d = Math.floor(diff / (1000*60*60*24));
+    const h = Math.floor((diff % (1000*60*60*24)) / (1000*60*60));
+    const m = Math.floor((diff % (1000*60*60)) / (1000*60));
+    const s = Math.floor((diff % (1000*60)) / 1000);
+
+    let text = '';
+    if (d > 0) text = `${d}g ${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    else text = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+
+    document.getElementById('nextEventTime').textContent = text;
+  }
+  tick();
+  setInterval(tick, 1000);
+}
+
+// Filter buttons
+document.querySelectorAll('.macro-filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.macro-filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    macroFilter = btn.dataset.filter;
+    renderMacroCalendar();
+  });
+});
+
+// ===== TRADE JOURNAL =====
+function getJournalTrades() {
+  try { return JSON.parse(localStorage.getItem('ese_journal') || '[]'); }
+  catch(e) { return []; }
+}
+
+function saveJournalTrades(trades) {
+  localStorage.setItem('ese_journal', JSON.stringify(trades));
+}
+
+// Apgar live calc
+document.querySelectorAll('#ap1,#ap2,#ap3,#ap4,#ap5').forEach(sel => {
+  sel.addEventListener('change', updateApgarDisplay);
+});
+
+function updateApgarDisplay() {
+  const total = [1,2,3,4,5].reduce((s,i) => s + parseInt(document.getElementById('ap'+i).value||0), 0);
+  document.getElementById('apgarTotal').textContent = total;
+  let grade = 'D';
+  if (total >= 8) grade = 'A';
+  else if (total >= 6) grade = 'B';
+  else if (total >= 4) grade = 'C';
+  document.getElementById('apgarGrade').textContent = grade;
+  document.getElementById('apgarGrade').style.color =
+    grade === 'A' ? 'var(--accent-green)' : grade === 'B' ? 'var(--accent-blue)' :
+    grade === 'C' ? 'var(--accent-amber)' : 'var(--accent-red)';
+}
+
+function saveTrade() {
+  const symbol = document.getElementById('jfSymbol').value.trim().toUpperCase();
+  const pnl = parseFloat(document.getElementById('jfPnl').value);
+  if (!symbol) { alert('Inserisci lo strumento!'); return; }
+  if (isNaN(pnl)) { alert('Inserisci il P/L!'); return; }
+
+  const apgar = [1,2,3,4,5].reduce((s,i) => s + parseInt(document.getElementById('ap'+i).value||0), 0);
+  let grade = 'D';
+  if (apgar >= 8) grade = 'A';
+  else if (apgar >= 6) grade = 'B';
+  else if (apgar >= 4) grade = 'C';
+
+  const douglasChecks = [1,2,3,4,5].map(i => document.getElementById('dc'+i).checked);
+  const douglasScore = douglasChecks.filter(Boolean).length;
+
+  const trade = {
+    id: Date.now(),
+    dateIn: document.getElementById('jfDateIn').value || new Date().toISOString().split('T')[0],
+    dateOut: document.getElementById('jfDateOut').value || '',
+    symbol: symbol,
+    dir: document.getElementById('jfDir').value,
+    broker: document.getElementById('jfBroker').value,
+    size: document.getElementById('jfSize').value,
+    entry: parseFloat(document.getElementById('jfEntry').value) || 0,
+    exit: parseFloat(document.getElementById('jfExit').value) || 0,
+    sl: parseFloat(document.getElementById('jfSL').value) || 0,
+    tp: parseFloat(document.getElementById('jfTP').value) || 0,
+    pnl: pnl,
+    pnlNet: pnl > 0 ? pnl * 0.74 : pnl,
+    setup: document.getElementById('jfSetup').value,
+    apgar: apgar,
+    grade: grade,
+    douglasScore: douglasScore,
+    douglasChecks: douglasChecks,
+    notes: document.getElementById('jfNotes').value,
+  };
+
+  const trades = getJournalTrades();
+  trades.unshift(trade);
+  saveJournalTrades(trades);
+  resetForm();
+  renderJournal();
+}
+
+function resetForm() {
+  ['jfDateIn','jfDateOut','jfSymbol','jfSize','jfEntry','jfExit','jfSL','jfTP','jfPnl','jfNotes'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('jfDir').value = 'long';
+  document.getElementById('jfBroker').value = 'degiro';
+  document.getElementById('jfSetup').value = 'macd-div';
+  [1,2,3,4,5].forEach(i => { document.getElementById('ap'+i).value = '2'; document.getElementById('dc'+i).checked = false; });
+  document.getElementById('jfDateIn').value = new Date().toISOString().split('T')[0];
+  updateApgarDisplay();
+}
+
+function deleteTrade(id) {
+  if (!confirm('Eliminare questo trade?')) return;
+  const trades = getJournalTrades().filter(t => t.id !== id);
+  saveJournalTrades(trades);
+  renderJournal();
+}
+
+const setupLabels = {
+  'macd-div':'MACD-H Div (Elder)','spring':'Spring (Wyckoff)','utad':'UTAD (Wyckoff)',
+  'triple-screen':'Triple Screen (Elder)','golden-cross':'Golden Cross','death-cross':'Death Cross',
+  'rsi-div':'RSI Divergence','fib-bounce':'Fibonacci Bounce','candle-rev':'Candlestick (Nison)',
+  'kagi':'Kagi (Nison)','intermarket':'Intermarket (Murphy)','dataroma':'Superinvestor (Dataroma)',
+  'pattern':'Chart Pattern (Bulkowski)','breakout':'Breakout/False BO','other':'Altro'
+};
+
+function renderJournal() {
+  const trades = getJournalTrades();
+  const list = document.getElementById('journalList');
+  const empty = document.getElementById('journalEmpty');
+
+  document.getElementById('journalCount').textContent = trades.length + ' trades';
+
+  if (trades.length === 0) {
+    list.innerHTML = '';
+    empty.style.display = 'block';
+    updateStats([]);
+    return;
+  }
+
+  empty.style.display = 'none';
+  let html = '';
+
+  trades.forEach(t => {
+    const isUp = t.pnl >= 0;
+    const dateStr = t.dateIn ? new Date(t.dateIn).toLocaleDateString('it-IT',{day:'2-digit',month:'short'}) : '—';
+    const gradeClass = t.grade === 'A' ? 'grade-a' : t.grade === 'B' ? 'grade-b' : t.grade === 'C' ? 'grade-c' : 'grade-d';
+    const setupLabel = setupLabels[t.setup] || t.setup;
+
+    html += `
+      <div class="jtrade">
+        <span class="jtrade-date">${dateStr}</span>
+        <span class="jtrade-dir ${t.dir}">${t.dir === 'long' ? '▲ LONG' : '▼ SHORT'}</span>
+        <span class="jtrade-info"><b>${t.symbol}</b> <span style="color:var(--text-muted);font-size:9px;">x${t.size || '—'}</span><small>${setupLabel} · ${t.broker} · Apgar ${t.apgar}/10</small></span>
+        <span class="jtrade-pnl ${isUp ? 'up' : 'down'}">${isUp ? '+' : ''}€${t.pnl.toFixed(2)}<br><span style="font-size:8px;color:var(--text-muted);">net ${isUp ? '+' : ''}€${t.pnlNet.toFixed(2)}</span></span>
+        <span class="jtrade-grade ${gradeClass}">${t.grade}</span>
+        <button class="jtrade-del" onclick="deleteTrade(${t.id})" title="Elimina">✕</button>
+      </div>
+    `;
+  });
+
+  list.innerHTML = html;
+  updateStats(trades);
+}
+
+function updateStats(trades) {
+  const tot = trades.length;
+  document.getElementById('stTot').textContent = tot;
+
+  if (tot === 0) {
+    ['stWin','stPF','stApgar','stGrade','stBest'].forEach(id => document.getElementById(id).textContent = '—');
+    document.getElementById('stPnl').textContent = '€0';
+    document.getElementById('stDouglas').textContent = '0/20';
+    return;
+  }
+
+  const wins = trades.filter(t => t.pnl > 0);
+  const losses = trades.filter(t => t.pnl < 0);
+  const winRate = ((wins.length / tot) * 100).toFixed(1);
+  document.getElementById('stWin').textContent = winRate + '%';
+  document.getElementById('stWin').style.color = winRate >= 50 ? 'var(--accent-green)' : 'var(--accent-red)';
+
+  const grossWin = wins.reduce((s,t) => s + t.pnl, 0);
+  const grossLoss = Math.abs(losses.reduce((s,t) => s + t.pnl, 0));
+  const pf = grossLoss > 0 ? (grossWin / grossLoss).toFixed(2) : grossWin > 0 ? '∞' : '0';
+  document.getElementById('stPF').textContent = pf;
+
+  const totalPnlNet = trades.reduce((s,t) => s + t.pnlNet, 0);
+  document.getElementById('stPnl').textContent = (totalPnlNet >= 0 ? '+' : '') + '€' + totalPnlNet.toFixed(2);
+  document.getElementById('stPnl').style.color = totalPnlNet >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+
+  const avgApgar = (trades.reduce((s,t) => s + (t.apgar||0), 0) / tot).toFixed(1);
+  document.getElementById('stApgar').textContent = avgApgar + '/10';
+
+  const gradeMap = {'A':4,'B':3,'C':2,'D':1};
+  const gradeLabels = {4:'A',3:'B',2:'C',1:'D'};
+  const avgGradeNum = trades.reduce((s,t) => s + (gradeMap[t.grade]||1), 0) / tot;
+  const avgGrade = gradeLabels[Math.round(avgGradeNum)] || 'D';
+  document.getElementById('stGrade').textContent = avgGrade;
+
+  // Best setup by win rate
+  const setupStats = {};
+  trades.forEach(t => {
+    if (!setupStats[t.setup]) setupStats[t.setup] = {wins:0, total:0};
+    setupStats[t.setup].total++;
+    if (t.pnl > 0) setupStats[t.setup].wins++;
+  });
+  let bestSetup = '—', bestRate = 0;
+  for (const [k,v] of Object.entries(setupStats)) {
+    if (v.total >= 2) {
+      const rate = v.wins / v.total;
+      if (rate > bestRate) { bestRate = rate; bestSetup = setupLabels[k] || k; }
+    }
+  }
+  document.getElementById('stBest').textContent = bestSetup;
+
+  // Douglas 20-trade exercise
+  const d20 = Math.min(tot, 20);
+  document.getElementById('stDouglas').textContent = d20 + '/20';
+  document.getElementById('stDouglas').style.color = d20 >= 20 ? 'var(--accent-green)' : 'var(--accent-purple)';
+}
+
+function exportJournal() {
+  const trades = getJournalTrades();
+  if (trades.length === 0) { alert('Nessun trade da esportare.'); return; }
+
+  const header = 'Data Entry,Data Exit,Strumento,Direzione,Broker,Size,Entry,Exit,SL,TP,P/L Lordo,P/L Netto 26%,Setup,Apgar,Grade,Douglas Score,Note\n';
+  const rows = trades.map(t =>
+    `${t.dateIn},${t.dateOut},${t.symbol},${t.dir},${t.broker},${t.size},${t.entry},${t.exit},${t.sl},${t.tp},${t.pnl},${t.pnlNet.toFixed(2)},${setupLabels[t.setup]||t.setup},${t.apgar}/10,${t.grade},${t.douglasScore}/5,"${(t.notes||'').replace(/"/g,'""')}"`
+  ).join('\n');
+
+  const blob = new Blob([header + rows], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'Bloombenz_Trade_Journal_' + new Date().toISOString().split('T')[0] + '.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// Init date field and apgar display
+document.getElementById('jfDateIn').value = new Date().toISOString().split('T')[0];
+updateApgarDisplay();
+</script>
+
+</body>
+</html>
