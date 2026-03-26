@@ -1661,21 +1661,21 @@ const instruments = {
     { symbol:'AUDCAD', tv:'FX:AUDCAD' },
   ],
   commodities: [
-    { symbol:'XAUUSD', tv:'TVC:GOLD', label:'Gold' },
-    { symbol:'XAGUSD', tv:'TVC:SILVER', label:'Silver' },
+    { symbol:'XAUUSD', tv:'OANDA:XAUUSD', label:'Gold' },
+    { symbol:'XAGUSD', tv:'OANDA:XAGUSD', label:'Silver' },
     { symbol:'USOIL',  tv:'TVC:USOIL', label:'WTI Oil' },
-    { symbol:'WHEAT',  tv:'TVC:WHEAT', label:'Wheat' },
+    { symbol:'WHEAT',  tv:'PEPPERSTONE:WHEAT', label:'Wheat' },
     { symbol:'CORN',   tv:'AMEX:CORN', label:'Corn' },
     { symbol:'SOYBEAN',tv:'AMEX:SOYB', label:'Soybean' },
-    { symbol:'COCOA',  tv:'TVC:CC1!', label:'Cocoa' },
-    { symbol:'COFFEE', tv:'TVC:KC1!', label:'Coffee' },
+    { symbol:'COCOA',  tv:'PEPPERSTONE:COCOA', label:'Cocoa' },
+    { symbol:'COFFEE', tv:'PEPPERSTONE:COFFEE', label:'Coffee' },
   ],
   indices: [
-    { symbol:'DXY',   tv:'TVC:DXY', label:'Dollar Index' },
-    { symbol:'VIX',   tv:'CBOE:VIX', label:'Fear Index' },
-    { symbol:'US10Y', tv:'TVC:US10Y', label:'US 10Y Yield' },
-    { symbol:'SPX',   tv:'FOREXCOM:SPX500', label:'S&P 500' },
-    { symbol:'NDX',   tv:'PEPPERSTONE:NAS100', label:'Nasdaq 100' },
+    { symbol:'DXY',   tv:'CAPITALCOM:DXY', label:'Dollar Index' },
+    { symbol:'VIX',   tv:'CAPITALCOM:VIX', label:'Fear Index' },
+    { symbol:'US10Y', tv:'CAPITALCOM:US10Y', label:'US 10Y Yield' },
+    { symbol:'SPX',   tv:'CAPITALCOM:US500', label:'S&P 500' },
+    { symbol:'NDX',   tv:'CAPITALCOM:US100', label:'Nasdaq 100' },
   ],
   stocks: [
     { symbol:'ABNB', tv:'NASDAQ:ABNB', label:'Airbnb' },
@@ -1684,9 +1684,9 @@ const instruments = {
     { symbol:'ROKU', tv:'NASDAQ:ROKU', label:'Roku' },
   ],
   etfs: [
-    { symbol:'CW8', tv:'EURONEXT:CW8', label:'Amundi MSCI World' },
-    { symbol:'WSML', tv:'XETR:WSML', label:'SPDR World Small Cap' },
-    { symbol:'FLXE', tv:'XETR:FLXE', label:'Franklin EM ex-China' },
+    { symbol:'CW8', tv:'EPA:CW8', label:'Amundi MSCI World' },
+    { symbol:'WSML', tv:'LSE:WSML', label:'SPDR World Small Cap' },
+    { symbol:'FLXE', tv:'GETTEX:FLXE', label:'Franklin EM ex-China' },
   ],
   watchTargets: [
     { symbol:'BNAI', tv:'NASDAQ:BNAI', label:'Brand Engagement Net.' },
@@ -1853,7 +1853,7 @@ document.querySelectorAll('.nav-tab').forEach(tab => {
       renderJournal();
     } else {
       if (v === 'forex') loadChart('FX:EURUSD', 'EURUSD');
-      else if (v === 'commodities') loadChart('TVC:GOLD', 'Gold');
+      else if (v === 'commodities') loadChart('OANDA:XAUUSD', 'Gold');
       else if (v === 'stocks') loadChart('NASDAQ:NVDA', 'NVDA');
     }
   });
