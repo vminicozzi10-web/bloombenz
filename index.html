@@ -1664,18 +1664,18 @@ const instruments = {
     { symbol:'XAUUSD', tv:'OANDA:XAUUSD', label:'Gold' },
     { symbol:'XAGUSD', tv:'OANDA:XAGUSD', label:'Silver' },
     { symbol:'USOIL',  tv:'TVC:USOIL', label:'WTI Oil' },
-    { symbol:'WHEAT',  tv:'PEPPERSTONE:WHEAT', label:'Wheat' },
-    { symbol:'CORN',   tv:'AMEX:CORN', label:'Corn' },
-    { symbol:'SOYBEAN',tv:'AMEX:SOYB', label:'Soybean' },
-    { symbol:'COCOA',  tv:'PEPPERSTONE:COCOA', label:'Cocoa' },
-    { symbol:'COFFEE', tv:'PEPPERSTONE:COFFEE', label:'Coffee' },
+    { symbol:'WHEAT',  tv:'FOREXCOM:WHEAT', label:'Wheat' },
+    { symbol:'CORN',   tv:'FOREXCOM:CORN', label:'Corn' },
+    { symbol:'SOYBEAN',tv:'FOREXCOM:SOYBEAN', label:'Soybean' },
+    { symbol:'COCOA',  tv:'ACTIVTRADES:COCOA', label:'Cocoa' },
+    { symbol:'COFFEE', tv:'FOREXCOM:COFFEE', label:'Coffee' },
   ],
   indices: [
     { symbol:'DXY',   tv:'CAPITALCOM:DXY', label:'Dollar Index' },
     { symbol:'VIX',   tv:'CAPITALCOM:VIX', label:'Fear Index' },
-    { symbol:'US10Y', tv:'CAPITALCOM:US10Y', label:'US 10Y Yield' },
-    { symbol:'SPX',   tv:'CAPITALCOM:US500', label:'S&P 500' },
-    { symbol:'NDX',   tv:'CAPITALCOM:US100', label:'Nasdaq 100' },
+    { symbol:'US10Y', tv:'FPMARKETS:US10YR', label:'US 10Y Yield' },
+    { symbol:'SPX',   tv:'FOREXCOM:SPX500', label:'S&P 500' },
+    { symbol:'NDX',   tv:'FOREXCOM:NAS100', label:'Nasdaq 100' },
   ],
   stocks: [
     { symbol:'ABNB', tv:'NASDAQ:ABNB', label:'Airbnb' },
@@ -1684,9 +1684,9 @@ const instruments = {
     { symbol:'ROKU', tv:'NASDAQ:ROKU', label:'Roku' },
   ],
   etfs: [
-    { symbol:'CW8', tv:'EPA:CW8', label:'Amundi MSCI World' },
-    { symbol:'WSML', tv:'LSE:WSML', label:'SPDR World Small Cap' },
-    { symbol:'FLXE', tv:'GETTEX:FLXE', label:'Franklin EM ex-China' },
+    { symbol:'CW8', tv:'EURONEXT:CW8', label:'Amundi MSCI World' },
+    { symbol:'WSML', tv:'LSE:WSML', label:'iShares World Small Cap' },
+    { symbol:'EXCN', tv:'XETR:EXCN', label:'Franklin EM ex-China' },
   ],
   watchTargets: [
     { symbol:'BNAI', tv:'NASDAQ:BNAI', label:'Brand Engagement Net.' },
@@ -1769,21 +1769,32 @@ function loadChart(tvSymbol, displayName) {
   currentDisplayName = displayName || tvSymbol;
   document.getElementById('chartSymbolName').textContent = currentDisplayName;
 
+  // ETFs not supported by widget — open TradingView in new tab
+  const externalOnly = ['EURONEXT:CW8','LSE:WSML'];
+  if (externalOnly.includes(tvSymbol)) {
+    const container = document.getElementById('chartContainer');
+    const tvUrl = 'https://www.tradingview.com/chart/?symbol=' + encodeURIComponent(tvSymbol);
+    container.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:16px;background:var(--bg-primary);">
+        <div style="font-family:var(--font-mono);font-size:13px;color:var(--text-muted);">⚠️ ${displayName} non è supportato dal widget integrato</div>
+        <a href="${tvUrl}" target="_blank" style="background:var(--accent-green);color:var(--bg-primary);padding:12px 24px;border-radius:6px;font-family:var(--font-mono);font-size:13px;font-weight:700;text-decoration:none;letter-spacing:0.5px;">📈 APRI GRAFICO SU TRADINGVIEW →</a>
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted);">Si apre in una nuova tab con il grafico completo</div>
+      </div>`;
+    return;
+  }
+
   const container = document.getElementById('chartContainer');
-  // Use TradingView Advanced Chart Widget via innerHTML to avoid iframe src encoding issues
   container.innerHTML = '';
 
   const widgetDiv = document.createElement('div');
   widgetDiv.className = 'tradingview-widget-container';
   widgetDiv.style.height = '100%';
   widgetDiv.style.width = '100%';
-
   const innerDiv = document.createElement('div');
   innerDiv.id = 'tv_chart_widget';
   innerDiv.style.height = '100%';
   innerDiv.style.width = '100%';
   widgetDiv.appendChild(innerDiv);
-
   container.appendChild(widgetDiv);
 
   const script = document.createElement('script');
