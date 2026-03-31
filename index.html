@@ -1094,6 +1094,38 @@
     border-radius: 2px;
   }
 
+  /* ===== SOFR-IORB WIDGET ===== */
+  .sofr-widget { border-bottom: 1px solid var(--border); }
+  .sofr-info-icon { display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:rgba(6,182,212,0.2);color:var(--accent-cyan);font-size:9px;font-weight:700;cursor:help;position:relative; }
+  .sofr-tooltip-box { display:none;position:absolute;bottom:22px;right:0;width:230px;max-height:220px;overflow-y:auto;background:var(--bg-tertiary);border:1px solid var(--border-active);border-radius:6px;padding:8px;z-index:50;font-family:var(--font-sans);font-size:9px;color:var(--text-secondary);line-height:1.45;box-shadow:0 8px 24px rgba(0,0,0,0.5); }
+  .sofr-info-icon:hover .sofr-tooltip-box { display:block; }
+  .sofr-tooltip-box h4 { font-family:var(--font-mono);font-size:9px;color:var(--accent-cyan);margin-bottom:4px; }
+  .sofr-tooltip-box .tt-label { font-family:var(--font-mono);font-size:8px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-top:5px; }
+  .sofr-metrics { display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;padding:10px 12px 6px; }
+  .sofr-metric { background:var(--bg-tertiary);border:1px solid var(--border);border-radius:4px;padding:8px 6px;text-align:center; }
+  .sofr-metric-label { font-family:var(--font-mono);font-size:8px;color:var(--text-muted);letter-spacing:0.5px;text-transform:uppercase; }
+  .sofr-metric-value { font-family:var(--font-mono);font-size:16px;font-weight:700;margin-top:2px; }
+  .sofr-regime { margin:6px 12px;padding:8px 10px;border-radius:4px;border:1px solid;display:flex;align-items:center;gap:8px; }
+  .sofr-regime-emoji { font-size:18px; }
+  .sofr-gauge-wrap { padding:6px 12px; }
+  .sofr-gauge-label { font-family:var(--font-mono);font-size:9px;color:var(--text-muted);letter-spacing:0.5px;margin-bottom:4px; }
+  .sofr-gauge { position:relative;height:22px;background:linear-gradient(90deg,var(--accent-green) 0%,var(--accent-amber) 50%,var(--accent-red) 100%);border-radius:11px;overflow:visible; }
+  .sofr-gauge-labels { display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:8px;color:var(--text-muted);margin-top:2px; }
+  .sofr-gauge-needle { position:absolute;top:-3px;width:4px;height:28px;background:var(--text-primary);border-radius:2px;border:1px solid var(--bg-primary);transition:left 1s cubic-bezier(0.34,1.56,0.64,1);box-shadow:0 0 6px rgba(255,255,255,0.4); }
+  .sofr-chart-wrap { padding:6px 12px 10px; }
+  .sofr-chart-label { font-family:var(--font-mono);font-size:9px;color:var(--text-muted);letter-spacing:0.5px;margin-bottom:4px; }
+  .sofr-chart { width:100%;height:80px;border-radius:4px; }
+  .sofr-murphy { margin:0 12px 8px;padding:8px;background:var(--bg-tertiary);border:1px solid var(--border);border-radius:4px; }
+  .sofr-murphy-title { font-family:var(--font-mono);font-size:9px;color:var(--accent-amber);letter-spacing:0.5px;margin-bottom:6px; }
+  .sofr-murphy-chain { display:flex;align-items:center;justify-content:space-between;font-family:var(--font-mono);font-size:9px;gap:2px; }
+  .sofr-murphy-node { text-align:center;padding:4px 6px;border-radius:3px;border:1px solid var(--border);background:var(--bg-secondary);min-width:42px; }
+  .sofr-murphy-arrow { color:var(--text-muted);font-size:10px; }
+  .sofr-murphy-narrative { font-size:10px;color:var(--text-secondary);margin-top:6px;line-height:1.5; }
+  .sofr-interp { margin:0 12px 10px;padding:8px;background:rgba(167,139,250,0.05);border:1px solid rgba(167,139,250,0.15);border-radius:4px; }
+  .sofr-interp-title { font-family:var(--font-mono);font-size:9px;color:var(--accent-purple);letter-spacing:0.5px;margin-bottom:6px; }
+  .sofr-interp-row { display:flex;gap:6px;padding:4px 0;font-size:10px;color:var(--text-secondary);line-height:1.4;border-bottom:1px solid rgba(255,255,255,0.03); }
+  .sofr-interp-badge { font-family:var(--font-mono);font-size:8px;font-weight:700;padding:2px 5px;border-radius:2px;white-space:nowrap;min-width:28px;text-align:center; }
+
   @media (max-width: 1200px) {
     .main-layout { grid-template-columns: 1fr; }
     .left-panel, .right-panel { max-height: none; }
@@ -1576,6 +1608,108 @@
       </div>
     </div>
 
+    <!-- SOFR-IORB LIQUIDITY WIDGET -->
+    <div class="sofr-widget">
+      <div class="panel-header">
+        <span>💧 SOFR-IORB SPREAD</span>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span style="font-size:8px;color:var(--accent-cyan);font-family:var(--font-mono);" id="sofrTimestamp">—</span>
+          <div class="sofr-info-icon">?
+            <div class="sofr-tooltip-box">
+              <h4>📊 Cos'è lo Spread SOFR-IORB?</h4>
+              <b>SOFR</b> (Secured Overnight Financing Rate) è il tasso a cui le banche USA si prestano denaro overnight usando Treasuries come collaterale. È il benchmark principale post-LIBOR.<br><br>
+              <b>IORB</b> (Interest on Reserve Balances) è il tasso che la Fed paga alle banche sulle riserve depositate. Funziona come "pavimento" dei tassi interbancari.<br><br>
+              <div class="tt-label">Perché lo Spread è importante?</div>
+              La differenza SOFR−IORB misura la <b>liquidità del sistema bancario USA</b>. Quando lo spread sale, le banche scarseggiano di riserve. Quando scende, c'è abbondanza. È un termometro della politica monetaria reale — non quella dichiarata dalla Fed, ma quella vissuta dai mercati.<br><br>
+              <div class="tt-label">Collegamento Murphy B4</div>
+              SOFR↑ → DXY↑ → Commodity↓ → Bond↓ → Equity↓<br>
+              Stress di liquidità = risk-off su tutta la catena.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3 Metriche -->
+      <div class="sofr-metrics">
+        <div class="sofr-metric">
+          <div class="sofr-metric-label">SOFR</div>
+          <div class="sofr-metric-value" id="sofrRate" style="color:var(--accent-cyan);">—</div>
+        </div>
+        <div class="sofr-metric">
+          <div class="sofr-metric-label">IORB</div>
+          <div class="sofr-metric-value" id="iorbRate" style="color:var(--accent-blue);">—</div>
+        </div>
+        <div class="sofr-metric">
+          <div class="sofr-metric-label">SPREAD</div>
+          <div class="sofr-metric-value" id="spreadBps">—</div>
+        </div>
+      </div>
+
+      <!-- Regime Badge -->
+      <div class="sofr-regime" id="sofrRegime" style="border-color:var(--border);background:var(--bg-tertiary);">
+        <span class="sofr-regime-emoji" id="regimeEmoji">⏳</span>
+        <div>
+          <div class="sofr-regime-text" id="regimeText">Caricamento...</div>
+          <div class="sofr-regime-desc" id="regimeDesc">In attesa dati FRED API</div>
+        </div>
+      </div>
+
+      <!-- Liquidity Stress Gauge -->
+      <div class="sofr-gauge-wrap">
+        <div class="sofr-gauge-label">LIQUIDITY STRESS GAUGE</div>
+        <div class="sofr-gauge">
+          <div class="sofr-gauge-needle" id="gaugeNeedle" style="left:50%;"></div>
+        </div>
+        <div class="sofr-gauge-labels">
+          <span>−25 bps</span><span>0</span><span>+25 bps</span>
+        </div>
+      </div>
+
+      <!-- 30-Day Chart -->
+      <div class="sofr-chart-wrap">
+        <div class="sofr-chart-label">STORICO 30 GIORNI (bps)</div>
+        <canvas class="sofr-chart" id="sofrCanvas"></canvas>
+      </div>
+
+      <!-- Murphy B4 Chain -->
+      <div class="sofr-murphy">
+        <div class="sofr-murphy-title">⛓️ MURPHY B4 CHAIN — Intermarket Impact</div>
+        <div class="sofr-murphy-chain">
+          <div class="sofr-murphy-node" id="mSOFR" style="border-color:var(--accent-cyan);">SOFR<br><span style="font-size:8px;" id="mSOFRdir">—</span></div>
+          <span class="sofr-murphy-arrow">→</span>
+          <div class="sofr-murphy-node" id="mDXY">DXY<br><span style="font-size:8px;" id="mDXYdir">—</span></div>
+          <span class="sofr-murphy-arrow">→</span>
+          <div class="sofr-murphy-node" id="mCOMM">COMM<br><span style="font-size:8px;" id="mCOMMdir">—</span></div>
+          <span class="sofr-murphy-arrow">→</span>
+          <div class="sofr-murphy-node" id="mBOND">BOND<br><span style="font-size:8px;" id="mBONDdir">—</span></div>
+          <span class="sofr-murphy-arrow">→</span>
+          <div class="sofr-murphy-node" id="mEQ">EQUITY<br><span style="font-size:8px;" id="mEQdir">—</span></div>
+        </div>
+        <div class="sofr-murphy-narrative" id="murphyNarrative">In attesa dati...</div>
+      </div>
+
+      <!-- Interpretation Guide -->
+      <div class="sofr-interp">
+        <div class="sofr-interp-title">📖 COME INTERPRETARE LO SPREAD</div>
+        <div class="sofr-interp-row">
+          <span class="sofr-interp-badge" style="background:rgba(0,255,136,0.15);color:var(--accent-green);">NEG</span>
+          <span><b>SOFR &lt; IORB</b> — Abbondante liquidità. Le banche preferiscono repo di mercato. Tipico di QE / alta abbondanza riserve (2021-22).</span>
+        </div>
+        <div class="sofr-interp-row">
+          <span class="sofr-interp-badge" style="background:rgba(59,130,246,0.15);color:var(--accent-blue);">≈ 0</span>
+          <span><b>SOFR ≈ IORB</b> — Equilibrio. Riserve adeguate. La Fed considera questo "ample reserves" ottimale.</span>
+        </div>
+        <div class="sofr-interp-row">
+          <span class="sofr-interp-badge" style="background:rgba(255,184,0,0.15);color:var(--accent-amber);">+5</span>
+          <span><b>SOFR > IORB (5-10 bps)</b> — Tensione. Riserve in calo, repo si irrigidisce. Attenzione alla liquidità.</span>
+        </div>
+        <div class="sofr-interp-row" style="border:none;">
+          <span class="sofr-interp-badge" style="background:rgba(255,59,92,0.15);color:var(--accent-red);">+10</span>
+          <span><b>SOFR >> IORB (>10 bps)</b> — Stress. Carenza riserve, potenziale crisi tipo settembre 2019 (repo spike).</span>
+        </div>
+      </div>
+    </div>
+
     <!-- DEGIRO -->
     <div>
       <div class="panel-header">
@@ -1638,7 +1772,7 @@
 
 <script>
 // ===== CONFIG =====
-let API_KEY = localStorage.getItem('ese_api_key') || '';
+let API_KEY = localStorage.getItem('ese_api_key') || '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';
 let currentTF = 'D';
 let currentTvSymbol = 'FX:EURUSD';
 let currentDisplayName = 'EURUSD';
@@ -2433,6 +2567,222 @@ function exportJournal() {
 // Init date field and apgar display
 document.getElementById('jfDateIn').value = new Date().toISOString().split('T')[0];
 updateApgarDisplay();
+
+// ===== SOFR-IORB LIQUIDITY WIDGET =====
+const FRED_KEY = '723086baf48965bc9eaea9b73264c928';
+
+async function fetchSOFRData() {
+  try {
+    const sofrUrl = `https://api.stlouisfed.org/fred/series/observations?series_id=SOFR&api_key=${FRED_KEY}&file_type=json&sort_order=desc&limit=35`;
+    const iorbUrl = `https://api.stlouisfed.org/fred/series/observations?series_id=IORB&api_key=${FRED_KEY}&file_type=json&sort_order=desc&limit=35`;
+
+    // Try multiple CORS proxies with fallback
+    const proxies = [
+      '',  // direct (works on proper origins)
+      'https://api.allorigins.win/raw?url=',
+      'https://corsproxy.io/?',
+      'https://api.codetabs.com/v1/proxy?quest='
+    ];
+
+    let sofrData, iorbData;
+
+    for (const proxy of proxies) {
+      try {
+        const sUrl = proxy ? proxy + encodeURIComponent(sofrUrl) : sofrUrl;
+        const iUrl = proxy ? proxy + encodeURIComponent(iorbUrl) : iorbUrl;
+        const [sRes, iRes] = await Promise.all([
+          fetch(sUrl, { signal: AbortSignal.timeout(8000) }),
+          fetch(iUrl, { signal: AbortSignal.timeout(8000) })
+        ]);
+        if (!sRes.ok || !iRes.ok) continue;
+        sofrData = await sRes.json();
+        iorbData = await iRes.json();
+        if (sofrData.observations && iorbData.observations) break;
+      } catch(e) { continue; }
+    }
+
+    if (!sofrData?.observations || !iorbData?.observations) throw new Error('All proxies failed');
+
+    const sofrObs = sofrData.observations.filter(o => o.value !== '.').slice(0, 30);
+    const iorbObs = iorbData.observations.filter(o => o.value !== '.').slice(0, 30);
+
+    if (sofrObs.length === 0 || iorbObs.length === 0) throw new Error('No data');
+
+    const sofrRate = parseFloat(sofrObs[0].value);
+    const iorbRate = parseFloat(iorbObs[0].value);
+    const spreadBps = Math.round((sofrRate - iorbRate) * 100);
+    const lastDate = sofrObs[0].date;
+
+    // Build 30-day spread history
+    const spreadHistory = [];
+    for (let i = 0; i < Math.min(sofrObs.length, iorbObs.length); i++) {
+      const s = parseFloat(sofrObs[i].value);
+      const ib = parseFloat(iorbObs[i].value);
+      spreadHistory.push({ date: sofrObs[i].date, spread: Math.round((s - ib) * 100) });
+    }
+    spreadHistory.reverse();
+
+    updateSOFRWidget(sofrRate, iorbRate, spreadBps, lastDate, spreadHistory);
+  } catch (err) {
+    console.error('SOFR fetch error:', err);
+    document.getElementById('sofrTimestamp').textContent = '⚠️ Dati offline';
+    document.getElementById('regimeText').textContent = 'DATI NON DISPONIBILI';
+    document.getElementById('regimeDesc').textContent = 'FRED API non raggiungibile. Riprovo tra 5 min.';
+  }
+}
+
+function updateSOFRWidget(sofr, iorb, spread, date, history) {
+  // Metrics
+  document.getElementById('sofrRate').textContent = sofr.toFixed(2) + '%';
+  document.getElementById('iorbRate').textContent = iorb.toFixed(2) + '%';
+
+  const spreadEl = document.getElementById('spreadBps');
+  spreadEl.textContent = (spread >= 0 ? '+' : '') + spread + ' bps';
+  spreadEl.style.color = spread <= -5 ? 'var(--accent-green)' : spread <= 3 ? 'var(--accent-blue)' : spread <= 10 ? 'var(--accent-amber)' : 'var(--accent-red)';
+
+  // Timestamp
+  document.getElementById('sofrTimestamp').textContent = date;
+
+  // Regime
+  const regime = document.getElementById('sofrRegime');
+  const emoji = document.getElementById('regimeEmoji');
+  const text = document.getElementById('regimeText');
+  const desc = document.getElementById('regimeDesc');
+
+  if (spread <= -5) {
+    regime.style.borderColor = 'rgba(0,255,136,0.3)'; regime.style.background = 'rgba(0,255,136,0.05)';
+    emoji.textContent = '🟢'; text.textContent = 'ABBONDANTE'; text.style.color = 'var(--accent-green)';
+    desc.textContent = 'Liquidità abbondante. Le banche preferiscono repo di mercato. Risk-on favorito.';
+  } else if (spread <= 3) {
+    regime.style.borderColor = 'rgba(59,130,246,0.3)'; regime.style.background = 'rgba(59,130,246,0.05)';
+    emoji.textContent = '🔵'; text.textContent = 'EQUILIBRIO'; text.style.color = 'var(--accent-blue)';
+    desc.textContent = 'Riserve adeguate. "Ample reserves" — regime ottimale per la Fed.';
+  } else if (spread <= 10) {
+    regime.style.borderColor = 'rgba(255,184,0,0.3)'; regime.style.background = 'rgba(255,184,0,0.05)';
+    emoji.textContent = '🟡'; text.textContent = 'TENSIONE'; text.style.color = 'var(--accent-amber)';
+    desc.textContent = 'Riserve in calo. Mercato repo si irrigidisce. Monitorare con attenzione.';
+  } else {
+    regime.style.borderColor = 'rgba(255,59,92,0.3)'; regime.style.background = 'rgba(255,59,92,0.05)';
+    emoji.textContent = '🔴'; text.textContent = 'STRESS'; text.style.color = 'var(--accent-red)';
+    desc.textContent = 'Carenza riserve critica! Potenziale crisi tipo settembre 2019 (repo spike).';
+  }
+
+  // Gauge needle: -25 to +25 bps → 0% to 100%
+  const clampedSpread = Math.max(-25, Math.min(25, spread));
+  const pct = ((clampedSpread + 25) / 50) * 100;
+  document.getElementById('gaugeNeedle').style.left = pct + '%';
+
+  // Murphy B4 Chain
+  const sofrDir = spread > 3 ? '↑ Tight' : spread < -3 ? '↓ Easy' : '→ Neutral';
+  const isStress = spread > 3;
+  document.getElementById('mSOFRdir').textContent = sofrDir;
+  document.getElementById('mDXYdir').textContent = isStress ? '↑ Strong' : '↓ Weak';
+  document.getElementById('mCOMMdir').textContent = isStress ? '↓ Pressure' : '↑ Support';
+  document.getElementById('mBONDdir').textContent = isStress ? '↓ Sell' : '↑ Rally';
+  document.getElementById('mEQdir').textContent = isStress ? '↓ Risk-off' : '↑ Risk-on';
+
+  ['mSOFR','mDXY','mCOMM','mBOND','mEQ'].forEach(id => {
+    const el = document.getElementById(id);
+    el.style.borderColor = isStress ? 'var(--accent-red)' : spread < -3 ? 'var(--accent-green)' : 'var(--border)';
+  });
+
+  const narrative = document.getElementById('murphyNarrative');
+  if (isStress) {
+    narrative.innerHTML = '⚠️ <b>SOFR in tensione</b> → Dollaro si rafforza → Commodity e Bond sotto pressione → Equity risk-off. Murphy B4: catena negativa attiva. Cautela su ingressi long.';
+  } else if (spread < -3) {
+    narrative.innerHTML = '✅ <b>Liquidità abbondante</b> → Dollaro debole → Commodity supportate → Bond in rally → Equity risk-on. Murphy B4: condizioni favorevoli per equity.';
+  } else {
+    narrative.innerHTML = '🔵 <b>Equilibrio</b> — Sistema stabile, nessuna pressione direzionale significativa dalla liquidità. Analizzare altri fattori per direzione.';
+  }
+
+  // 30-day chart
+  drawSpreadChart(history);
+}
+
+function drawSpreadChart(data) {
+  const canvas = document.getElementById('sofrCanvas');
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  ctx.scale(dpr, dpr);
+  const W = rect.width, H = rect.height;
+
+  ctx.clearRect(0, 0, W, H);
+
+  if (data.length < 2) return;
+
+  const spreads = data.map(d => d.spread);
+  const min = Math.min(...spreads, -10);
+  const max = Math.max(...spreads, 10);
+  const range = max - min || 1;
+  const pad = 4;
+
+  const xStep = (W - pad * 2) / (data.length - 1);
+  const toY = v => pad + (1 - (v - min) / range) * (H - pad * 2);
+
+  // Zero line
+  const zeroY = toY(0);
+  ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([3, 3]);
+  ctx.beginPath();
+  ctx.moveTo(pad, zeroY);
+  ctx.lineTo(W - pad, zeroY);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Gradient fill
+  const gradient = ctx.createLinearGradient(0, 0, 0, H);
+  const lastSpread = spreads[spreads.length - 1];
+  if (lastSpread > 5) {
+    gradient.addColorStop(0, 'rgba(255,59,92,0.3)');
+    gradient.addColorStop(1, 'rgba(255,59,92,0)');
+  } else if (lastSpread < -3) {
+    gradient.addColorStop(0, 'rgba(0,255,136,0.3)');
+    gradient.addColorStop(1, 'rgba(0,255,136,0)');
+  } else {
+    gradient.addColorStop(0, 'rgba(59,130,246,0.3)');
+    gradient.addColorStop(1, 'rgba(59,130,246,0)');
+  }
+
+  // Fill area
+  ctx.beginPath();
+  ctx.moveTo(pad, toY(spreads[0]));
+  for (let i = 1; i < spreads.length; i++) ctx.lineTo(pad + i * xStep, toY(spreads[i]));
+  ctx.lineTo(pad + (spreads.length - 1) * xStep, H);
+  ctx.lineTo(pad, H);
+  ctx.closePath();
+  ctx.fillStyle = gradient;
+  ctx.fill();
+
+  // Line
+  ctx.beginPath();
+  ctx.moveTo(pad, toY(spreads[0]));
+  for (let i = 1; i < spreads.length; i++) ctx.lineTo(pad + i * xStep, toY(spreads[i]));
+  ctx.strokeStyle = lastSpread > 5 ? '#ff3b5c' : lastSpread < -3 ? '#00ff88' : '#3b82f6';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Last point dot
+  const lastX = pad + (spreads.length - 1) * xStep;
+  const lastY = toY(lastSpread);
+  ctx.beginPath();
+  ctx.arc(lastX, lastY, 3, 0, Math.PI * 2);
+  ctx.fillStyle = ctx.strokeStyle;
+  ctx.fill();
+
+  // Value label
+  ctx.font = '10px JetBrains Mono, monospace';
+  ctx.fillStyle = ctx.strokeStyle;
+  ctx.textAlign = 'right';
+  ctx.fillText((lastSpread >= 0 ? '+' : '') + lastSpread + ' bps', lastX - 6, lastY - 6);
+}
+
+// Fetch on load and refresh every 5 min
+fetchSOFRData();
+setInterval(fetchSOFRData, 300000);
 </script>
 
 </body>
